@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+.env.*
+*.sqlite3
+*.log
+.mypy_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+docker-compose.override.yml

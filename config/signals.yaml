@@ -1,0 +1,5 @@
+defaults:
+  price_drop_30d:
+    threshold_pct: 0.05
+  low_inventory:
+    months_of_inventory: 2.0

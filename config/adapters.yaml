@@ -1,0 +1,6 @@
+default: mock
+overrides:
+  - geography_pattern: "30301|30302|30303"
+    adapter: mls_grid
+  - geography_pattern: "Atlanta-GA"
+    adapter: mls_grid
