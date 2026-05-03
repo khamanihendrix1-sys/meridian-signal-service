@@ -1,5 +1,7 @@
 # Meridian Signal Service
 
+![CI](https://github.com/khamanihendrix1-sys/meridian-signal-service/actions/workflows/ci.yml/badge.svg)
+
 Meridian Signal Service is a Python FastAPI microservice that provides the data and intelligence backbone for Meridian Signals® and Meridian Data®. It exposes authenticated APIs for listings, market reports, signals, comps, and asynchronous report generation.
 
 ## Getting Started
