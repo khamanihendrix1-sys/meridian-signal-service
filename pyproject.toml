@@ -15,7 +15,7 @@ classifiers = [
 
 [project.dependencies]
 fastapi = "^0.111.1"
-uvicorn[standard] = "^0.23.2"
+"uvicorn[standard]" = "^0.23.2"
 pydantic = "^2.8.0"
 pydantic-settings = "^2.5.2"
 sqlalchemy[asyncio] = "^2.0.45"
