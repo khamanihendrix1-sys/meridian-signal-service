@@ -1,28 +1,22 @@
-[project]
+[tool.poetry]
 name = "meridian-signal-service"
 version = "0.1.0"
 description = "Meridian Signals microservice backend for Wix integration."
 readme = "README.md"
 authors = [{name = "Meridian Software", email = "hello@meridiansoftware.com"}]
-license = {text = "MIT"}
-requires-python = ">=3.12,<3.13"
-classifiers = [
-    "Framework :: FastAPI",
-    "Programming Language :: Python :: 3.12",
-    "License :: OSI Approved :: MIT License",
-    "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
-]
+license = "MIT"
 
-[project.dependencies]
+[tool.poetry.dependencies]
+python = "^3.12"
 fastapi = "^0.111.1"
-"uvicorn[standard]" = "^0.23.2"
+uvicorn = {version = "^0.23.2", extras = ["standard"]}
 pydantic = "^2.8.0"
 pydantic-settings = "^2.5.2"
-"sqlalchemy[asyncio]" = "^2.0.45"
+sqlalchemy = {version = "^2.0.45", extras = ["asyncio"]}
 asyncpg = "^1.0.0"
 alembic = "^1.12.0"
 redis = "^4.9.0"
-"celery[redis]" = "^5.3.1"
+celery = {version = "^5.3.1", extras = ["redis"]}
 apscheduler = "^3.11.0"
 httpx = "^0.27.0"
 reportlab = "^4.0.0"
@@ -37,27 +31,24 @@ geoalchemy2 = "^0.13.0"
 shapely = "^2.1.1"
 python-dotenv = "^1.0.0"
 
-[project.optional-dependencies]
-dev = [
-    "ipython",
-    "watchdog",
-]
-test = [
-    "pytest",
-    "pytest-asyncio",
-    "pytest-httpx",
-    "pytest-cov",
-    "factory_boy",
-    "hypothesis",
-]
-lint = [
-    "ruff",
-    "black",
-    "mypy",
-]
-prod = []
+[tool.poetry.group.dev.dependencies]
+ipython = "*"
+watchdog = "*"
 
-[project.scripts]
+[tool.poetry.group.test.dependencies]
+pytest = "*"
+pytest-asyncio = "*"
+pytest-httpx = "*"
+pytest-cov = "*"
+factory_boy = "*"
+hypothesis = "*"
+
+[tool.poetry.group.lint.dependencies]
+ruff = "*"
+black = "*"
+mypy = "*"
+
+[tool.poetry.scripts]
 meridian-api = "meridian.main:run"
 meridian-worker = "meridian.integrations.celery_app:run_worker"
 meridian-scheduler = "meridian.integrations.scheduler:run_scheduler"
@@ -84,3 +75,7 @@ show_error_codes = true
 minversion = "7.0"
 addopts = "--strict-markers --strict-config --cov=meridian --cov-report=term-missing"
 testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
