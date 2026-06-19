@@ -3,7 +3,7 @@ name = "meridian-signal-service"
 version = "0.1.0"
 description = "Meridian Signals microservice backend for Wix integration."
 readme = "README.md"
-authors = ["Meridian Software <hello@meridiansoftware.com>"]
+authors = [{name = "Meridian Software", email = "hello@meridiansoftware.com"}]
 license = {text = "MIT"}
 requires-python = ">=3.12,<3.13"
 classifiers = [
