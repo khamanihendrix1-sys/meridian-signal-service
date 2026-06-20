@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, DateTime, Enum, ForeignKey, String, func
@@ -9,6 +10,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from meridian.db.base import Base
 from meridian.db.models.enums import CompJobStatus
+
+if TYPE_CHECKING:
+    from meridian.db.models.comp import Comp
 
 
 class CompJob(Base):
@@ -24,4 +28,4 @@ class CompJob(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    comps: Mapped[list["Comp"]] = relationship("Comp", back_populates="job")
+    comps: Mapped[list[Comp]] = relationship("Comp", back_populates="job")
