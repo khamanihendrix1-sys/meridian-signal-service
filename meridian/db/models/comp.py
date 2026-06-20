@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from decimal import Decimal
 from datetime import datetime
+from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, Numeric, String, func
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, Numeric, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,7 +24,7 @@ class Comp(Base):
     distance_miles: Mapped[float] = mapped_column(Float, nullable=False)
     sold_date_delta_days: Mapped[int] = mapped_column(Integer, nullable=False)
     raw_similarity: Mapped[float] = mapped_column(Float, nullable=False)
-    adjustments: Mapped[list[dict]] = mapped_column(JSON, nullable=False, default=list)
+    adjustments: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
     adjusted_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     rank: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
