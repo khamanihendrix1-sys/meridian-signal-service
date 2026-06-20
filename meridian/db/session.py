@@ -3,8 +3,12 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from meridian.hooks import DB_SESSION_CLOSED, DB_SESSION_OPENED, trigger_hook
 from meridian.settings import settings
@@ -15,7 +19,6 @@ def create_engine() -> AsyncEngine:
     return create_async_engine(
         settings.database_url,
         echo=False,
-        future=True,
     )
 
 
@@ -26,13 +29,16 @@ def get_engine() -> AsyncEngine:
 
 
 @lru_cache(maxsize=1)
-def get_async_session_factory() -> sessionmaker:
+def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
     """Return cached async session factory."""
-    return sessionmaker(
-        get_engine(),
+    return async_sessionmaker(
+        bind=get_engine(),
         class_=AsyncSession,
         expire_on_commit=False,
     )
+
+
+async_session_factory = get_async_session_factory()
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
