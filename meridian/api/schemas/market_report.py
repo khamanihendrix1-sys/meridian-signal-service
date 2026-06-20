@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -25,11 +25,10 @@ class MarketReportBase(BaseModel):
     yoy_price_change: float
     mom_price_change: float
     list_to_sold_ratio: float
-    raw_metrics: dict = Field(default_factory=dict)
+    raw_metrics: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class MarketReportResponse(MarketReportBase):
@@ -41,4 +40,4 @@ class MarketReportRefreshRequest(BaseModel):
     """Request schema for refreshing market reports."""
     geography: str
     geo_type: GeoType
-    as_of: Optional[date] = None
+    as_of: date | None = None
