@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -32,7 +32,6 @@ class AdapterRegistry:
         config = self._load_config()
         default_adapter = config.get("default", "mock")
 
-        # Check overrides
         for override in config.get("overrides", []):
             pattern = override["geography_pattern"]
             if re.match(pattern, geo):
@@ -40,8 +39,9 @@ class AdapterRegistry:
 
         return self.get(default_adapter)
 
-    def _load_config(self) -> dict:
+    def _load_config(self) -> dict[str, Any]:
         """Load adapter configuration from YAML."""
         config_path = settings.config_dir / "adapters.yaml"
-        with open(config_path, "r") as f:
-            return yaml.safe_load(f)
+        with open(config_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        return data if isinstance(data, dict) else {}
