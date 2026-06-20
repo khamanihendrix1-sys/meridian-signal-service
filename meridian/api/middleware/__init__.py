@@ -1,1 +1,1 @@
-"""API middleware package.""}
+"""API middleware package."""
