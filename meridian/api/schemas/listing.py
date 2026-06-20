@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
-from shapely.geometry import Point
 
 from meridian.db.models.enums import GeoType, ListingStatus, PropertyType
 
@@ -15,44 +14,34 @@ class ListingBase(BaseModel):
     """Base schema for listing data."""
     source: str
     source_id: str
-    mls_number: Optional[str] = None
+    mls_number: str | None = None
     address: str
-    unit: Optional[str] = None
+    unit: str | None = None
     city: str
     state: str
     zip: str
-    zip4: Optional[str] = None
-    county: Optional[str] = None
-    lat: Optional[float] = None
-    lon: Optional[float] = None
+    zip4: str | None = None
+    county: str | None = None
+    lat: float | None = None
+    lon: float | None = None
     property_type: PropertyType
-    beds: Optional[int] = None
-    baths: Optional[float] = None
-    living_sqft: Optional[int] = None
-    lot_sqft: Optional[int] = None
-    year_built: Optional[int] = None
+    beds: int | None = None
+    baths: float | None = None
+    living_sqft: int | None = None
+    lot_sqft: int | None = None
+    year_built: int | None = None
     list_price: Decimal
-    sold_price: Optional[Decimal] = None
+    sold_price: Decimal | None = None
     list_date: date
-    sold_date: Optional[date] = None
+    sold_date: date | None = None
     status: ListingStatus
     days_on_market: int = Field(default=0)
     photos: list[str] = Field(default_factory=list)
-    raw: dict = Field(default_factory=dict)
+    raw: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-
-    @classmethod
-    def from_orm(cls, obj):
-        """Convert ORM object to schema, handling geom."""
-        data = super().from_orm(obj).__dict__
-        if obj.geom and isinstance(obj.geom, Point):
-            data["lat"] = obj.geom.y
-            data["lon"] = obj.geom.x
-        return cls(**data)
+    model_config = {"from_attributes": True}
 
 
 class ListingResponse(ListingBase):
@@ -64,41 +53,41 @@ class ListingCreate(BaseModel):
     """Schema for creating a listing."""
     source: str
     source_id: str
-    mls_number: Optional[str] = None
+    mls_number: str | None = None
     address: str
-    unit: Optional[str] = None
+    unit: str | None = None
     city: str
     state: str
     zip: str
-    zip4: Optional[str] = None
-    county: Optional[str] = None
-    lat: Optional[float] = None
-    lon: Optional[float] = None
+    zip4: str | None = None
+    county: str | None = None
+    lat: float | None = None
+    lon: float | None = None
     property_type: PropertyType
-    beds: Optional[int] = None
-    baths: Optional[float] = None
-    living_sqft: Optional[int] = None
-    lot_sqft: Optional[int] = None
-    year_built: Optional[int] = None
+    beds: int | None = None
+    baths: float | None = None
+    living_sqft: int | None = None
+    lot_sqft: int | None = None
+    year_built: int | None = None
     list_price: Decimal
-    sold_price: Optional[Decimal] = None
+    sold_price: Decimal | None = None
     list_date: date
-    sold_date: Optional[date] = None
+    sold_date: date | None = None
     status: ListingStatus
     photos: list[str] = Field(default_factory=list)
-    raw: dict = Field(default_factory=dict)
+    raw: dict[str, Any] = Field(default_factory=dict)
 
 
 class ListingSearchFilters(BaseModel):
     """Filters for listing search."""
-    geography: Optional[str] = None
-    geo_type: Optional[GeoType] = None
-    property_types: Optional[list[PropertyType]] = None
-    min_price: Optional[float] = None
-    max_price: Optional[float] = None
-    beds: Optional[int] = None
-    baths: Optional[float] = None
-    status: Optional[ListingStatus] = None
+    geography: str | None = None
+    geo_type: GeoType | None = None
+    property_types: list[PropertyType] | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    beds: int | None = None
+    baths: float | None = None
+    status: ListingStatus | None = None
 
 
 class ListingSearchRequest(BaseModel):
