@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 
 from meridian.hooks import APP_SHUTDOWN, APP_STARTUP, trigger_hook
-from meridian.settings import get_settings
 from meridian.observability.logging import configure_structlog
+from meridian.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ def create_app() -> FastAPI:
         openapi_url="/openapi.json",
         docs_url="/docs",
         redoc_url=None,
+        middleware=middleware,
     )
 
     @app.on_event("startup")
@@ -60,7 +61,7 @@ def create_app() -> FastAPI:
         await trigger_hook(APP_SHUTDOWN)
 
     @app.exception_handler(Exception)
-    async def internal_exception_handler(request, exc):
+    async def internal_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         logger.exception("Unhandled exception", exc_info=exc)
         return JSONResponse(
             status_code=500,
