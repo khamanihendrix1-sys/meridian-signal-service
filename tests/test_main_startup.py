@@ -4,10 +4,12 @@ import importlib
 import sys
 from pathlib import Path
 
+from _pytest.monkeypatch import MonkeyPatch
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
-def test_importing_main_does_not_require_runtime_env_vars(monkeypatch) -> None:
+def test_importing_main_does_not_require_runtime_env_vars(monkeypatch: MonkeyPatch) -> None:
     for env_var in (
         "DATABASE_URL",
         "REDIS_URL",
