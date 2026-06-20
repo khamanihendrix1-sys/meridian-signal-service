@@ -36,7 +36,7 @@ def get_async_session_factory() -> sessionmaker:
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Yield a new database session and expose lifecycle hooks."""
+    """Async generator that yields a DB session and emits lifecycle hooks."""
     async with get_async_session_factory()() as session:
         await trigger_hook(DB_SESSION_OPENED, session=session)
         try:

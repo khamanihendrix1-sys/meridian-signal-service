@@ -42,7 +42,10 @@ class _LazySettings:
     """Proxy that defers Settings instantiation until first attribute access."""
 
     def __getattr__(self, name: str) -> Any:
-        return getattr(get_settings(), name)
+        try:
+            return getattr(get_settings(), name)
+        except AttributeError as exc:
+            raise AttributeError(f"Settings has no attribute {name!r}") from exc
 
 
 settings = cast(Settings, _LazySettings())
