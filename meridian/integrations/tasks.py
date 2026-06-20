@@ -5,11 +5,11 @@ from uuid import UUID
 
 from celery import Task
 
-from meridian.integrations.celery_app import celery_app
 from meridian.comps.engine import CompEngine
-from meridian.db.repositories import CompRepository
 from meridian.db.models.enums import CompJobStatus
+from meridian.db.repositories import CompRepository
 from meridian.db.session import async_session_factory
+from meridian.integrations.celery_app import celery_app
 
 
 @celery_app.task(name="meridian.comps.compute_comps", bind=True, max_retries=3)
@@ -33,6 +33,6 @@ def compute_comps_task(self: Task, job_id: str, subject_listing_id: str, limit: 
                 await repo.update_job_status(job, CompJobStatus.SUCCESS, comp_ids=comp_ids)
             except Exception as exc:
                 await repo.update_job_status(job, CompJobStatus.FAILED, error=str(exc))
-                raise exc
+                raise
 
-    return asyncio.run(work())
+    asyncio.run(work())
