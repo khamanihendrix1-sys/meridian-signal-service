@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -15,11 +15,10 @@ class SignalDefinitionBase(BaseModel):
     category: SignalCategory
     description: str
     refresh_frequency: str
-    output_schema: dict = Field(default_factory=dict)
+    output_schema: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class SignalDefinitionResponse(SignalDefinitionBase):
@@ -34,13 +33,12 @@ class SignalLogBase(BaseModel):
     geo_type: GeoType
     timestamp: datetime
     raw_value: float
-    computed_output: dict = Field(default_factory=dict)
+    computed_output: dict[str, Any] = Field(default_factory=dict)
     confidence: float
     fired: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class SignalLogResponse(SignalLogBase):
@@ -52,4 +50,4 @@ class SignalEvaluateRequest(BaseModel):
     """Request schema for triggering signal evaluation."""
     geography: str
     geo_type: GeoType
-    run_id: Optional[str] = None
+    run_id: str | None = None
