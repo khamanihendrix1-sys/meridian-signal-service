@@ -30,6 +30,7 @@ python-multipart = "^0.0.7"
 geoalchemy2 = "^0.13.0"
 shapely = "^2.1.1"
 python-dotenv = "^1.0.0"
+PyYAML = "^6.0.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "*"
@@ -47,6 +48,7 @@ hypothesis = "*"
 ruff = "*"
 black = "*"
 mypy = "*"
+types-PyYAML = "*"
 
 [tool.poetry.scripts]
 meridian-api = "meridian.main:run"
@@ -70,6 +72,20 @@ check_untyped_defs = true
 warn_unused_ignores = true
 warn_unused_configs = true
 show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+  "geoalchemy2",
+  "geoalchemy2.*",
+  "shapely",
+  "shapely.*",
+  "celery",
+  "redis",
+  "redis.*",
+  "apscheduler",
+  "apscheduler.*",
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
