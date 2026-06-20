@@ -45,7 +45,7 @@ class _LazySettings:
         try:
             return getattr(get_settings(), name)
         except AttributeError as exc:
-            raise AttributeError(f"Settings has no attribute {name!r}") from exc
+            raise AttributeError(f"'settings' object has no attribute {name!r}") from exc
 
 
 settings = cast(Settings, _LazySettings())
