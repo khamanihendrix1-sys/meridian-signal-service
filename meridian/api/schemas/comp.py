@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from meridian.db.models.enums import GeoType, CompJobStatus
+from meridian.db.models.enums import CompJobStatus
 
 
 class CompRequest(BaseModel):
@@ -25,13 +25,12 @@ class CompResponse(BaseModel):
     distance_miles: float
     sold_date_delta_days: int
     raw_similarity: float
-    adjustments: list[dict]
+    adjustments: list[dict[str, Any]]
     adjusted_price: Decimal
     rank: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class CompJobResponse(BaseModel):
@@ -40,11 +39,10 @@ class CompJobResponse(BaseModel):
     subject_listing_id: UUID
     status: CompJobStatus
     comp_ids: list[UUID]
-    error: Optional[str] = None
+    error: str | None = None
     created_at: datetime
     updated_at: datetime
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     comps: list[CompResponse] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
