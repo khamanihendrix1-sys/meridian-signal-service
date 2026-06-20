@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from typing import Sequence
 from uuid import UUID, uuid4
 
 from geoalchemy2.shape import to_shape
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from meridian.comps.scoring import CompScore, haversine_distance, score_comparable
 from meridian.db.models import Comp, Listing
 from meridian.db.repositories import CompRepository, ListingRepository
@@ -15,7 +16,7 @@ from meridian.hooks import COMP_COMPUTE_COMPLETE, COMP_COMPUTE_FAILED, COMP_COMP
 class CompEngine:
     """Compute comparable sale matches for a subject listing."""
 
-    def __init__(self, session) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.listing_repo = ListingRepository(session)
         self.comp_repo = CompRepository(session)
@@ -59,7 +60,7 @@ class CompEngine:
 
             scored_candidates: list[tuple[Listing, CompScore, int]] = []
             for listing in candidates:
-                if not listing.geom or not listing.sold_date:
+                if not listing.geom or not listing.sold_date or listing.sold_price is None:
                     continue
 
                 candidate_point = to_shape(listing.geom)
