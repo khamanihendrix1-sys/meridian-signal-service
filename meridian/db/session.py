@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from sqlalchemy.ext.asyncio import AsyncAttrs, AsyncEngine, AsyncSession, create_async_engine
+from functools import lru_cache
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from meridian.hooks import DB_SESSION_CLOSED, DB_SESSION_OPENED, trigger_hook
@@ -16,17 +19,25 @@ def create_engine() -> AsyncEngine:
     )
 
 
-engine = create_engine()
-async_session_factory = sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+@lru_cache(maxsize=1)
+def get_engine() -> AsyncEngine:
+    """Return cached SQLAlchemy async engine."""
+    return create_engine()
 
 
-async def get_session() -> AsyncSession:
+@lru_cache(maxsize=1)
+def get_async_session_factory() -> sessionmaker:
+    """Return cached async session factory."""
+    return sessionmaker(
+        get_engine(),
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Yield a new database session and expose lifecycle hooks."""
-    async with async_session_factory() as session:
+    async with get_async_session_factory()() as session:
         await trigger_hook(DB_SESSION_OPENED, session=session)
         try:
             yield session

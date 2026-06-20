@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional, cast
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -31,4 +32,17 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
 
 
-settings = Settings()
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """Return cached application settings."""
+    return Settings()
+
+
+class _LazySettings:
+    """Proxy that defers Settings instantiation until first attribute access."""
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(get_settings(), name)
+
+
+settings = cast(Settings, _LazySettings())
