@@ -1,17 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 
 from meridian.db.session import async_session_factory
 from meridian.hooks import SIGNAL_RUN_COMPLETE, SIGNAL_RUN_START, trigger_hook
-from meridian.services.market_report import MarketReportService
 from meridian.settings import settings
 from meridian.signals.engine import PersistentSignalEngine
 from meridian.signals.evaluators import LowInventoryEvaluator, PriceDrop30dEvaluator
@@ -32,7 +28,6 @@ class SignalScheduler:
 
     async def start(self) -> None:
         """Start the scheduler."""
-        # Schedule signal runs every 6 hours
         self.scheduler.add_job(
             self._run_signals_job,
             CronTrigger(hour="*/6"),
@@ -51,8 +46,6 @@ class SignalScheduler:
 
     async def _run_signals_job(self) -> None:
         """Job to run signals for all geographies."""
-        # For now, run for a few sample geographies
-        # In production, this would query for active geographies
         geographies = [
             ("Atlanta-GA", "CITY"),
             ("30301", "ZIP"),
@@ -91,10 +84,9 @@ def run_scheduler() -> None:
 
     scheduler = SignalScheduler()
 
-    async def main():
+    async def main() -> None:
         await scheduler.start()
         try:
-            # Keep running
             while True:
                 await asyncio.sleep(60)
         except KeyboardInterrupt:
