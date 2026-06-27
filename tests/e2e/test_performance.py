@@ -6,6 +6,7 @@ from typing import Any
 
 import psutil
 import pytest
+import pytest_asyncio
 
 from tests.e2e.test_end_to_end import WebhookSimulator
 
@@ -263,7 +264,7 @@ class LoadGenerator:
 class TestWebhookPerformance:
     """Test webhook processing performance."""
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def load_generator(self) -> LoadGenerator:
         """Create load generator."""
         simulator = WebhookSimulator()
