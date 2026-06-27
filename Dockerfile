@@ -7,10 +7,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY pyproject.toml .
-RUN python -m pip install --upgrade pip poetry
+COPY pyproject.toml poetry.lock ./
+RUN python -m pip install --upgrade pip poetry==1.8.3
 RUN poetry config virtualenvs.create false
-RUN poetry install --only main
+RUN poetry install --only main --no-root --sync
 
 FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends libpq5 && rm -rf /var/lib/apt/lists/*
