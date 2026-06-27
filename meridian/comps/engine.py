@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Sequence
 from uuid import UUID, uuid4
 
@@ -61,7 +61,7 @@ class CompEngine:
             distance = haversine_distance(
                 subject_lat, subject_lon, candidate_point.y, candidate_point.x
             )
-            days_delta = (datetime.utcnow().date() - listing.sold_date).days
+            days_delta = (datetime.now(UTC).date() - listing.sold_date).days
             score = score_comparable(
                 subject_price=subject.list_price,
                 subject_sqft=subject.living_sqft,
@@ -93,7 +93,7 @@ class CompEngine:
                 adjustments=score.adjustments,
                 adjusted_price=score.adjusted_price,
                 rank=rank,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
             )
             self.session.add(comp)
             persisted.append(comp)
@@ -102,7 +102,6 @@ class CompEngine:
         if not persisted:
             return persisted
 
-        await self.session.commit()
         return persisted
 
     async def compute_for_subject_sync(

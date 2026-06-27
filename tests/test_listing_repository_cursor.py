@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -37,7 +37,7 @@ class _FakeSession:
 
 @pytest.mark.asyncio
 async def test_search_listings_uses_keyset_pagination() -> None:
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     rows = [
         SimpleNamespace(created_at=now, id=uuid4()),
         SimpleNamespace(created_at=now - timedelta(seconds=1), id=uuid4()),

@@ -14,10 +14,9 @@ def upgrade() -> None:
     op.create_index("ix_listings_zip", "listings", ["zip"])
     op.create_index("ix_listings_county", "listings", ["county"])
     op.create_index("ix_listings_list_price", "listings", ["list_price"])
-    op.create_index(
-        "ix_listings_created_at_id_desc",
-        "listings",
-        ["created_at", "id"],
+    op.execute(
+        "CREATE INDEX ix_listings_created_at_id_desc "
+        "ON listings (created_at DESC, id DESC)"
     )
 
 

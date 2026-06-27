@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -25,8 +24,12 @@ def _compute_comps_task(
             if not job:
                 raise ValueError(f"Comp job {job_id} not found")
 
-            job.status = CompJobStatus.RUNNING
-            job.updated_at = datetime.utcnow()
+            await repo.update_job_status(
+                job,
+                CompJobStatus.RUNNING,
+                commit=True,
+                refresh=False,
+            )
 
             try:
                 engine = CompEngine(session)
@@ -41,6 +44,7 @@ def _compute_comps_task(
                     commit=True,
                 )
             except Exception as exc:
+                await session.rollback()
                 await repo.update_job_status(
                     job,
                     CompJobStatus.FAILED,

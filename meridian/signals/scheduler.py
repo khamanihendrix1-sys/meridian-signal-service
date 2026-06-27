@@ -21,7 +21,14 @@ class SignalScheduler:
     def __init__(self) -> None:
         self.scheduler = AsyncIOScheduler()
         self.redis = Redis.from_url(settings.redis_url)
-        self.max_concurrency = max(1, settings.signal_scheduler_concurrency)
+        configured_concurrency = getattr(settings, "signal_scheduler_concurrency", 1)
+        if not isinstance(configured_concurrency, int) or configured_concurrency < 1:
+            logger.warning(
+                "Invalid signal_scheduler_concurrency=%r; using 1",
+                configured_concurrency,
+            )
+            configured_concurrency = 1
+        self.max_concurrency = configured_concurrency
         self.evaluators = {
             "price_drop_30d": PriceDrop30dEvaluator(),
             "low_inventory": LowInventoryEvaluator(),

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Sequence
 
 from fastapi import APIRouter, Depends, Query
+from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +16,6 @@ from meridian.api.schemas import (
 from meridian.db.models import SignalDefinition, SignalLog
 from meridian.signals.engine import PersistentSignalEngine
 from meridian.signals.evaluators import LowInventoryEvaluator, PriceDrop30dEvaluator
-from redis.asyncio import Redis
 
 router = APIRouter(prefix="/v1/signals", tags=["signals"])
 

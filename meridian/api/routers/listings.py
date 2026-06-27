@@ -48,7 +48,7 @@ async def list_listings(
         limit=limit,
         cursor=cursor,
     )
-    if next_cursor is not None:
+    if next_cursor:
         response.headers["X-Next-Cursor"] = next_cursor
     return listings
 
@@ -86,7 +86,7 @@ async def search_listings(
         limit=request.limit,
         cursor=request.cursor,
     )
-    if next_cursor is not None:
+    if next_cursor:
         response.headers["X-Next-Cursor"] = next_cursor
     return listings
 

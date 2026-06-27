@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Sequence
 from uuid import uuid4
 
@@ -93,12 +93,12 @@ class PersistentSignalEngine(SignalEngine):
                 signal_id=definition.id,
                 geography=geography,
                 geo_type=geo_type,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
                 raw_value=result.raw_value,
                 computed_output=result.computed_output,
                 confidence=result.confidence,
                 fired=result.fired,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
             )
 
             return log

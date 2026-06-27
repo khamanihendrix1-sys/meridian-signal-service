@@ -14,6 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from meridian.db.models import Listing
 from meridian.db.models.enums import GeoType
 
+METERS_PER_MILE = 1609.34
+WGS84_SRID = 4326
+
 
 class ListingRepository:
     """Repository for listing database operations."""
@@ -73,6 +76,7 @@ class ListingRepository:
 
         if cursor:
             cursor_created_at, cursor_id = self._decode_cursor(cursor)
+            # Keyset condition must stay aligned with DESC ordering below.
             stmt = stmt.where(
                 or_(
                     Listing.created_at < cursor_created_at,
@@ -103,8 +107,9 @@ class ListingRepository:
     ) -> Sequence[Listing]:
         """Search listings within radius using PostGIS."""
         # ST_DWithin uses meters, convert miles to meters
-        radius_meters = radius_miles * 1609.34
-        search_point = func.ST_SetSRID(func.ST_MakePoint(lon, lat), 4326)
+        radius_meters = radius_miles * METERS_PER_MILE
+        # ST_MakePoint uses (x, y) = (longitude, latitude).
+        search_point = func.ST_SetSRID(func.ST_MakePoint(lon, lat), WGS84_SRID)
         listing_geography = cast(Listing.geom, Geography)
         point_geography = cast(search_point, Geography)
 
