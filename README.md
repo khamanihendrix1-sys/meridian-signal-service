@@ -20,14 +20,21 @@ This service should be deployed to a container host (not Vercel). The recommende
    ```
 3. Set required secrets:
    ```bash
-   fly secrets set DATABASE_URL=... REDIS_URL=... JWT_SIGNING_KEY=... WIX_HMAC_SECRET=...
+   fly secrets set --app meridian-signal-service DATABASE_URL=...
+   fly secrets set --app meridian-signal-service REDIS_URL=...
+   fly secrets set --app meridian-signal-service JWT_SIGNING_KEY=...
+   fly secrets set --app meridian-signal-service WIX_HMAC_SECRET=...
    ```
+   - `DATABASE_URL`: full Postgres connection string including scheme, user, password, host, port, and database name
+   - `REDIS_URL`: full Redis connection string (`redis://host:6379/0`)
+   - `JWT_SIGNING_KEY`: strong random signing key for JWT tokens
+   - `WIX_HMAC_SECRET`: shared webhook signing secret used by Meridian/Wix integration
 4. Deploy:
    ```bash
    fly deploy --config deploy/fly.toml
    ```
 
-The service exposes `/healthz` for health checks and listens on internal port `8000`.
+The service exposes `/healthz` for health checks (implemented in `meridian/api/routers/health.py`) and listens on internal port `8000`. In the current implementation, `/healthz` returns a minimal `{"status":"ok"}` response.
 
 ## Getting Started
 

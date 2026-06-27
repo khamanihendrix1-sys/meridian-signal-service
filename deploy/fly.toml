@@ -2,10 +2,6 @@ app = "meridian-signal-service"
 
 [env]
   APP_ENV = "production"
-  DATABASE_URL = "{{DATABASE_URL}}"
-  REDIS_URL = "{{REDIS_URL}}"
-  JWT_SIGNING_KEY = "{{JWT_SIGNING_KEY}}"
-  WIX_HMAC_SECRET = "{{WIX_HMAC_SECRET}}"
 
 [[services]]
   internal_port = 8000
@@ -21,12 +17,12 @@ app = "meridian-signal-service"
 
   [[services.http_checks]]
     interval = "15s"
-    timeout = "2s"
+    timeout = "10s"
     grace_period = "10s"
     method = "get"
     path = "/healthz"
+    # Internal health checks run inside Fly's network before edge TLS termination.
     protocol = "http"
-    tls_skip_verify = false
 
 [experimental]
   auto_rollback = true
