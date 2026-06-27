@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+from typing import TypedDict
 from dataclasses import dataclass
-from datetime import date
 from decimal import Decimal
 from math import cos, radians, sin, sqrt
+
+
+class CompAdjustment(TypedDict):
+    factor: str
+    delta: int
+    reason: str
 
 
 @dataclass
@@ -12,7 +18,7 @@ class CompScore:
     distance_miles: float
     sold_date_delta_days: int
     raw_similarity: float
-    adjustments: list[dict]
+    adjustments: list[CompAdjustment]
     adjusted_price: Decimal
 
 
@@ -50,7 +56,7 @@ def score_comparable(
         "sqft": 0.1,
         "recency": 0.1,
     }
-    adjustments: list[dict] = []
+    adjustments: list[CompAdjustment] = []
 
     distance_score = max(0.0, 1.0 - (distance_miles / 10.0))
     price_ratio = float(candidate_price / subject_price) if subject_price > 0 else 1.0

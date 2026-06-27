@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 from shapely.geometry import Point
 
@@ -43,7 +43,7 @@ class RawListing:
     sold_date: date | None
     status: str  # Will map to ListingStatus enum
     photos: list[str]
-    raw: dict
+    raw: dict[str, Any]
 
 
 @dataclass
@@ -59,7 +59,7 @@ class RawMarketMetrics:
     yoy_price_change: float
     mom_price_change: float
     list_to_sold_ratio: float
-    raw_metrics: dict
+    raw_metrics: dict[str, Any]
 
 
 class MarketAdapter(ABC):
@@ -69,7 +69,7 @@ class MarketAdapter(ABC):
     capabilities: set[Capability]
 
     @abstractmethod
-    async def fetch_listings(
+    def fetch_listings(
         self,
         *,
         geography: str,
@@ -81,7 +81,7 @@ class MarketAdapter(ABC):
         ...
 
     @abstractmethod
-    async def fetch_sold_comps(
+    def fetch_sold_comps(
         self,
         *,
         center: tuple[float, float],  # (lat, lon)
@@ -104,6 +104,6 @@ class MarketAdapter(ABC):
         ...
 
     @abstractmethod
-    async def health(self) -> dict:
+    async def health(self) -> dict[str, str]:
         """Return adapter health status."""
         ...

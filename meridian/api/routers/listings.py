@@ -13,6 +13,7 @@ from meridian.api.schemas import (
     NearbySearchRequest,
 )
 from meridian.db.models import Listing
+from meridian.db.models.enums import GeoType
 from meridian.db.repositories import ListingRepository
 
 router = APIRouter(prefix="/v1/listings", tags=["listings"])
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/v1/listings", tags=["listings"])
 @router.get("", response_model=list[ListingResponse])
 async def list_listings(
     geography: str | None = Query(None),
-    geo_type: str | None = Query(None),
+    geo_type: GeoType | None = Query(None),
     property_types: list[str] | None = Query(None),
     min_price: float | None = Query(None, ge=0),
     max_price: float | None = Query(None, ge=0),

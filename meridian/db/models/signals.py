@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, String, func
@@ -21,7 +22,7 @@ class SignalDefinition(Base):
     category: Mapped[SignalCategory] = mapped_column(Enum(SignalCategory), nullable=False)
     description: Mapped[str] = mapped_column(String(512), nullable=False)
     refresh_frequency: Mapped[str] = mapped_column(String(64), nullable=False)
-    output_schema: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    output_schema: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     logs: Mapped[list["SignalLog"]] = relationship("SignalLog", back_populates="signal")
 
@@ -37,7 +38,7 @@ class SignalLog(Base):
     geo_type: Mapped[GeoType] = mapped_column(Enum(GeoType), nullable=False)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     raw_value: Mapped[float] = mapped_column(Float, nullable=False)
-    computed_output: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    computed_output: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     fired: Mapped[bool] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

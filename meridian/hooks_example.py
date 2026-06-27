@@ -103,7 +103,7 @@ def on_comp_compute_start(
 def on_comp_compute_complete(
     job_id: Any,
     subject_listing_id: Any,
-    comp_ids: list,
+    comp_ids: list[str],
     count: int,
     **payload: Any,
 ) -> None:
