@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -7,7 +8,6 @@ from apscheduler.triggers.cron import CronTrigger
 from redis.asyncio import Redis
 
 from meridian.db.session import async_session_factory
-from meridian.hooks import SIGNAL_RUN_COMPLETE, SIGNAL_RUN_START, trigger_hook
 from meridian.settings import settings
 from meridian.signals.engine import PersistentSignalEngine
 from meridian.signals.evaluators import LowInventoryEvaluator, PriceDrop30dEvaluator
@@ -21,6 +21,7 @@ class SignalScheduler:
     def __init__(self) -> None:
         self.scheduler = AsyncIOScheduler()
         self.redis = Redis.from_url(settings.redis_url)
+        self.max_concurrency = max(1, settings.signal_scheduler_concurrency)
         self.evaluators = {
             "price_drop_30d": PriceDrop30dEvaluator(),
             "low_inventory": LowInventoryEvaluator(),
@@ -52,27 +53,26 @@ class SignalScheduler:
             ("30309", "ZIP"),
         ]
 
-        async with async_session_factory() as session:
-            engine = PersistentSignalEngine(
-                evaluators=self.evaluators,
-                session=session,
-                redis_client=self.redis,
-            )
+        semaphore = asyncio.Semaphore(self.max_concurrency)
+        tasks = [
+            self._run_signals_for_geography(geography, geo_type, semaphore)
+            for geography, geo_type in geographies
+        ]
+        await asyncio.gather(*tasks)
 
-            for geography, geo_type in geographies:
+    async def _run_signals_for_geography(
+        self, geography: str, geo_type: str, semaphore: asyncio.Semaphore
+    ) -> None:
+        """Run all signals for a geography."""
+        async with semaphore:
+            async with async_session_factory() as session:
+                engine = PersistentSignalEngine(
+                    evaluators=self.evaluators,
+                    session=session,
+                    redis_client=self.redis,
+                )
                 try:
-                    await trigger_hook(
-                        SIGNAL_RUN_START,
-                        geography=geography,
-                        geo_type=geo_type,
-                    )
                     logs = await engine.run_all_signals(geography, geo_type)
-                    await trigger_hook(
-                        SIGNAL_RUN_COMPLETE,
-                        geography=geography,
-                        geo_type=geo_type,
-                        log_count=len(logs),
-                    )
                     logger.info(
                         f"Ran signals for {geography}: {len(logs)} logs created"
                     )
@@ -82,8 +82,6 @@ class SignalScheduler:
 
 def run_scheduler() -> None:
     """Run the signal scheduler."""
-    import asyncio
-
     scheduler = SignalScheduler()
 
     async def main() -> None:

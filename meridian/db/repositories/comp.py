@@ -42,6 +42,8 @@ class CompRepository:
         *,
         comp_ids: list[UUID] | None = None,
         error: str | None = None,
+        commit: bool = True,
+        refresh: bool = False,
     ) -> CompJob:
         """Update comp job status and optional metadata."""
         job.status = status
@@ -54,8 +56,10 @@ class CompRepository:
             if status in {CompJobStatus.SUCCESS, CompJobStatus.FAILED}
             else None
         )
-        await self.session.commit()
-        await self.session.refresh(job)
+        if commit:
+            await self.session.commit()
+        if refresh:
+            await self.session.refresh(job)
         return job
 
     async def get_comps_for_job(self, job_id: UUID) -> Sequence[Comp]:

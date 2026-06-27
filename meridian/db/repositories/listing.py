@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import base64
+import binascii
+import json
+from datetime import datetime
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from geoalchemy2 import Geography
+from sqlalchemy import and_, cast, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from meridian.db.models import Listing
@@ -34,8 +39,8 @@ class ListingRepository:
         baths: float | None = None,
         status: str | None = None,
         limit: int = 50,
-        offset: int = 0,
-    ) -> Sequence[Listing]:
+        cursor: str | None = None,
+    ) -> tuple[Sequence[Listing], str | None]:
         """Search listings with filters."""
         stmt = select(Listing)
 
@@ -66,9 +71,27 @@ class ListingRepository:
         if status:
             stmt = stmt.where(Listing.status == status)
 
-        stmt = stmt.limit(limit).offset(offset)
+        if cursor:
+            cursor_created_at, cursor_id = self._decode_cursor(cursor)
+            stmt = stmt.where(
+                or_(
+                    Listing.created_at < cursor_created_at,
+                    and_(
+                        Listing.created_at == cursor_created_at,
+                        Listing.id < cursor_id,
+                    ),
+                )
+            )
+
+        stmt = stmt.order_by(desc(Listing.created_at), desc(Listing.id)).limit(
+            limit + 1
+        )
         result = await self.session.execute(stmt)
-        return result.scalars().all()
+        listings = result.scalars().all()
+        has_next = len(listings) > limit
+        page = listings[:limit]
+        next_cursor = self._encode_cursor(page[-1]) if has_next and page else None
+        return page, next_cursor
 
     async def search_nearby(
         self,
@@ -81,12 +104,15 @@ class ListingRepository:
         """Search listings within radius using PostGIS."""
         # ST_DWithin uses meters, convert miles to meters
         radius_meters = radius_miles * 1609.34
+        search_point = func.ST_SetSRID(func.ST_MakePoint(lon, lat), 4326)
+        listing_geography = cast(Listing.geom, Geography)
+        point_geography = cast(search_point, Geography)
 
         stmt = (
             select(Listing)
-            .where(
-                Listing.geom.ST_DWithin(f"SRID=4326;POINT({lon} {lat})", radius_meters)
-            )
+            .where(Listing.geom.is_not(None))
+            .where(func.ST_DWithin(listing_geography, point_geography, radius_meters))
+            .order_by(func.ST_Distance(listing_geography, point_geography))
             .limit(limit)
         )
 
@@ -110,3 +136,27 @@ class ListingRepository:
         """Delete a listing."""
         await self.session.delete(listing)
         await self.session.commit()
+
+    @staticmethod
+    def _encode_cursor(listing: Listing) -> str:
+        payload = {
+            "created_at": listing.created_at.isoformat(),
+            "id": str(listing.id),
+        }
+        encoded = base64.urlsafe_b64encode(json.dumps(payload).encode("utf-8"))
+        return encoded.decode("utf-8")
+
+    @staticmethod
+    def _decode_cursor(cursor: str) -> tuple[datetime, UUID]:
+        try:
+            decoded = base64.urlsafe_b64decode(cursor.encode("utf-8")).decode("utf-8")
+            payload = json.loads(decoded)
+            return datetime.fromisoformat(payload["created_at"]), UUID(payload["id"])
+        except (
+            KeyError,
+            ValueError,
+            TypeError,
+            json.JSONDecodeError,
+            binascii.Error,
+        ) as exc:
+            raise ValueError("Invalid cursor") from exc

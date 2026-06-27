@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from meridian.db.models import MarketReport, SignalDefinition, SignalLog
 from meridian.db.repositories import MarketReportRepository
-from meridian.services.market_report import MarketReportService
 from meridian.signals.base import SignalEngine, SignalEvaluator
 
 
@@ -26,7 +25,6 @@ class PersistentSignalEngine(SignalEngine):
         self.session = session
         self.redis = redis_client
         self.market_repo = MarketReportRepository(session)
-        self.market_service = MarketReportService(session)
 
     async def run_all_signals(
         self,
@@ -54,12 +52,16 @@ class PersistentSignalEngine(SignalEngine):
             limit=100,  # Last 100 reports for analysis
         )
 
-        logs = []
+        logs: list[SignalLog] = []
         for definition in definitions:
             log = await self._evaluate_and_log_signal(
                 definition, geography, geo_type_enum, history, run_id
             )
             logs.append(log)
+
+        if logs:
+            self.session.add_all(logs)
+            await self.session.commit()
 
         return logs
 
@@ -98,10 +100,6 @@ class PersistentSignalEngine(SignalEngine):
                 fired=result.fired,
                 created_at=datetime.utcnow(),
             )
-
-            self.session.add(log)
-            await self.session.commit()
-            await self.session.refresh(log)
 
             return log
         finally:

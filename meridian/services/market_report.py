@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from meridian.adapters import registry
 from meridian.db.models import MarketReport
 from meridian.db.repositories import MarketReportRepository
-from meridian.hooks import MARKET_REPORT_REFRESH_START, trigger_hook
 
 
 class MarketReportService:
@@ -42,13 +41,6 @@ class MarketReportService:
 
         geo_type_enum = GeoType(geo_type)
         as_of_date = as_of or date.today()
-
-        await trigger_hook(
-            MARKET_REPORT_REFRESH_START,
-            geography=geography,
-            geo_type=geo_type,
-            as_of=as_of_date,
-        )
 
         # Resolve adapter for geography
         adapter = registry.for_geography(geography)

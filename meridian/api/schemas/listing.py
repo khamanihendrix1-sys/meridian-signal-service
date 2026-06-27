@@ -99,7 +99,7 @@ class ListingSearchRequest(BaseModel):
 
     filters: ListingSearchFilters = Field(default_factory=ListingSearchFilters)
     limit: int = Field(default=50, ge=1, le=500)
-    offset: int = Field(default=0, ge=0)
+    cursor: str | None = None
 
 
 class NearbySearchRequest(BaseModel):

@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from meridian.hooks import DB_SESSION_CLOSED, DB_SESSION_OPENED, trigger_hook
 from meridian.settings import settings
 
 
@@ -42,10 +41,6 @@ async_session_factory = get_async_session_factory()
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Async generator that yields a DB session and emits lifecycle hooks."""
+    """Async generator that yields a DB session."""
     async with get_async_session_factory()() as session:
-        await trigger_hook(DB_SESSION_OPENED, session=session)
-        try:
-            yield session
-        finally:
-            await trigger_hook(DB_SESSION_CLOSED, session=session)
+        yield session

@@ -18,8 +18,7 @@
       "environment": [
         {"name": "DATABASE_URL", "value": "REPLACE_WITH_DATABASE_URL"},
         {"name": "REDIS_URL", "value": "REPLACE_WITH_REDIS_URL"},
-        {"name": "JWT_SIGNING_KEY", "value": "REPLACE_WITH_JWT_SIGNING_KEY"},
-        {"name": "WIX_HMAC_SECRET", "value": "REPLACE_WITH_WIX_HMAC_SECRET"}
+        {"name": "JWT_SIGNING_KEY", "value": "REPLACE_WITH_JWT_SIGNING_KEY"}
       ]
     }
   ]

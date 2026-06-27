@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "meridian-signal-service"
 version = "0.1.0"
-description = "Meridian Signals microservice backend for Wix integration."
+description = "Meridian Signals microservice backend."
 readme = "README.md"
 authors = ["Meridian Software <hello@meridiansoftware.com>"]
 license = "MIT"
