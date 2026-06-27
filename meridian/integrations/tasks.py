@@ -24,7 +24,12 @@ def _compute_comps_task(
             if not job:
                 raise ValueError(f"Comp job {job_id} not found")
 
-            await repo.update_job_status(job, CompJobStatus.RUNNING)
+            await repo.update_job_status(
+                job,
+                CompJobStatus.RUNNING,
+                commit=True,
+                refresh=False,
+            )
 
             try:
                 engine = CompEngine(session)
@@ -33,10 +38,19 @@ def _compute_comps_task(
                 )
                 comp_ids = [comp.id for comp in comps]
                 await repo.update_job_status(
-                    job, CompJobStatus.SUCCESS, comp_ids=comp_ids
+                    job,
+                    CompJobStatus.SUCCESS,
+                    comp_ids=comp_ids,
+                    commit=True,
                 )
             except Exception as exc:
-                await repo.update_job_status(job, CompJobStatus.FAILED, error=str(exc))
+                await session.rollback()
+                await repo.update_job_status(
+                    job,
+                    CompJobStatus.FAILED,
+                    error=str(exc),
+                    commit=True,
+                )
                 raise
 
     asyncio.run(work())

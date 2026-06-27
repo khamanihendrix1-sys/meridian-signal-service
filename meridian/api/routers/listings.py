@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Sequence
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from meridian.api.deps import get_db
@@ -21,6 +21,7 @@ router = APIRouter(prefix="/v1/listings", tags=["listings"])
 
 @router.get("", response_model=list[ListingResponse])
 async def list_listings(
+    response: Response,
     geography: str | None = Query(None),
     geo_type: GeoType | None = Query(None),
     property_types: list[str] | None = Query(None),
@@ -30,12 +31,12 @@ async def list_listings(
     baths: float | None = Query(None, ge=0),
     status: str | None = Query(None),
     limit: int = Query(50, ge=1, le=500),
-    offset: int = Query(0, ge=0),
+    cursor: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ) -> Sequence[Listing]:
     """List listings with optional filters."""
     repo = ListingRepository(db)
-    return await repo.search_listings(
+    listings, next_cursor = await repo.search_listings(
         geography=geography,
         geo_type=geo_type,
         property_types=property_types,
@@ -45,8 +46,11 @@ async def list_listings(
         baths=baths,
         status=status,
         limit=limit,
-        offset=offset,
+        cursor=cursor,
     )
+    if next_cursor:
+        response.headers["X-Next-Cursor"] = next_cursor
+    return listings
 
 
 @router.get("/{listing_id}", response_model=ListingResponse)
@@ -65,11 +69,12 @@ async def get_listing(
 @router.post("/search", response_model=list[ListingResponse])
 async def search_listings(
     request: ListingSearchRequest,
+    response: Response,
     db: AsyncSession = Depends(get_db),
 ) -> Sequence[Listing]:
     """Advanced search for listings."""
     repo = ListingRepository(db)
-    return await repo.search_listings(
+    listings, next_cursor = await repo.search_listings(
         geography=request.filters.geography,
         geo_type=request.filters.geo_type,
         property_types=[pt.value for pt in (request.filters.property_types or [])],
@@ -79,8 +84,11 @@ async def search_listings(
         baths=request.filters.baths,
         status=request.filters.status.value if request.filters.status else None,
         limit=request.limit,
-        offset=request.offset,
+        cursor=request.cursor,
     )
+    if next_cursor:
+        response.headers["X-Next-Cursor"] = next_cursor
+    return listings
 
 
 @router.post("/nearby", response_model=list[ListingResponse])

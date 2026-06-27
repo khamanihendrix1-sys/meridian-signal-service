@@ -14,4 +14,12 @@ celery_app.autodiscover_tasks(["meridian.integrations"])
 
 def run_worker() -> None:
     """Run a Celery worker instance."""
-    celery_app.worker_main(["worker", "--loglevel=info", "--pool=solo"])
+    celery_app.worker_main(
+        [
+            "worker",
+            "--loglevel=info",
+            "--pool=prefork",
+            "--concurrency",
+            str(settings.celery_worker_concurrency),
+        ]
+    )

@@ -8,7 +8,7 @@ from typing import Any
 
 @dataclass
 class WebhookSimulator:
-    """Lightweight Wix webhook simulator used by performance tests."""
+    """Lightweight webhook simulator used by performance tests."""
 
     _counter: count[int] = field(default_factory=lambda: count(1))
 
@@ -26,7 +26,7 @@ class WebhookSimulator:
             },
         }
 
-    def simulate_wix_webhook_processing(
+    def simulate_webhook_processing(
         self,
         payload: dict[str, Any],
     ) -> dict[str, Any]:

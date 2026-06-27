@@ -16,7 +16,6 @@ def test_importing_main_does_not_require_runtime_env_vars(
         "DATABASE_URL",
         "REDIS_URL",
         "JWT_SIGNING_KEY",
-        "WIX_HMAC_SECRET",
     ):
         monkeypatch.delenv(env_var, raising=False)
 

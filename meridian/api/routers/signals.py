@@ -7,14 +7,13 @@ from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from meridian.api.deps import get_db
+from meridian.api.deps import get_db, get_redis
 from meridian.api.schemas import (
     SignalDefinitionResponse,
     SignalEvaluateRequest,
     SignalLogResponse,
 )
 from meridian.db.models import SignalDefinition, SignalLog
-from meridian.settings import settings
 from meridian.signals.engine import PersistentSignalEngine
 from meridian.signals.evaluators import LowInventoryEvaluator, PriceDrop30dEvaluator
 
@@ -53,28 +52,24 @@ async def get_signal_logs(
 async def evaluate_signals(
     request: SignalEvaluateRequest,
     db: AsyncSession = Depends(get_db),
+    redis_client: Redis = Depends(get_redis),
 ) -> Sequence[SignalLog]:
     """Trigger signal evaluation for a geography."""
-    redis_client = Redis.from_url(settings.redis_url)
+    evaluators = {
+        "price_drop_30d": PriceDrop30dEvaluator(),
+        "low_inventory": LowInventoryEvaluator(),
+    }
 
-    try:
-        evaluators = {
-            "price_drop_30d": PriceDrop30dEvaluator(),
-            "low_inventory": LowInventoryEvaluator(),
-        }
+    engine = PersistentSignalEngine(
+        evaluators=evaluators,
+        session=db,
+        redis_client=redis_client,
+    )
 
-        engine = PersistentSignalEngine(
-            evaluators=evaluators,
-            session=db,
-            redis_client=redis_client,
-        )
+    logs = await engine.run_all_signals(
+        geography=request.geography,
+        geo_type=request.geo_type.value,
+        run_id=request.run_id,
+    )
 
-        logs = await engine.run_all_signals(
-            geography=request.geography,
-            geo_type=request.geo_type.value,
-            run_id=request.run_id,
-        )
-
-        return logs
-    finally:
-        await redis_client.close()
+    return logs

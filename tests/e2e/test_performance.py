@@ -238,7 +238,7 @@ class LoadGenerator:
             payload = self.simulator.create_signal_webhook_payload()
 
             # Simulate processing (this would normally be an HTTP request)
-            self.simulator.simulate_wix_webhook_processing(payload)
+            self.simulator.simulate_webhook_processing(payload)
 
             # Simulate some processing delay (mimic real API call)
             await asyncio.sleep(0.001)  # 1ms simulated processing
@@ -381,7 +381,7 @@ class TestSystemPerformance:
                 start_time = time.time()
                 try:
                     payload = simulator.create_signal_webhook_payload()
-                    simulator.simulate_wix_webhook_processing(payload)
+                    simulator.simulate_webhook_processing(payload)
                     await asyncio.sleep(0.01)  # Simulate network delay
                     response_time = time.time() - start_time
                     response_times.append(response_time)
@@ -489,7 +489,7 @@ class TestPerformanceBenchmarks:
 
         for i in range(1000):
             payload = simulator.create_signal_webhook_payload()
-            simulator.simulate_wix_webhook_processing(payload)
+            simulator.simulate_webhook_processing(payload)
 
         end_time = time.time()
         total_time = end_time - start_time
@@ -514,7 +514,7 @@ class TestPerformanceBenchmarks:
         # Process many webhooks
         for i in range(5000):
             payload = simulator.create_signal_webhook_payload()
-            simulator.simulate_wix_webhook_processing(payload)
+            simulator.simulate_webhook_processing(payload)
 
         final_memory = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
         memory_increase = final_memory - initial_memory

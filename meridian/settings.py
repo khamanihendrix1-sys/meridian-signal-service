@@ -19,8 +19,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/meridian"
     redis_url: str = "redis://localhost:6379/0"
     jwt_signing_key: str = "dev-signing-key"
-    wix_hmac_secret: str = "dev-wix-secret"
     log_level: str = "INFO"
+    signal_scheduler_concurrency: int = 3
+    celery_worker_concurrency: int = 4
     s3_endpoint_url: str | None = None
     s3_bucket: str | None = None
     s3_access_key: str | None = None
