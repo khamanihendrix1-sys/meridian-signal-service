@@ -480,7 +480,7 @@ class TestSystemPerformance:
 class TestPerformanceBenchmarks:
     """Performance benchmark tests for continuous monitoring."""
 
-    async def test_webhook_processing_benchmark(self) -> None:
+    def test_webhook_processing_benchmark(self) -> None:
         """Benchmark webhook processing performance."""
         simulator = WebhookSimulator()
 
@@ -505,7 +505,7 @@ class TestPerformanceBenchmarks:
             f"Total time: {total_time:.2f}s"
         )
 
-    async def test_memory_efficiency_benchmark(self) -> None:
+    def test_memory_efficiency_benchmark(self) -> None:
         """Benchmark memory efficiency."""
         simulator = WebhookSimulator()
 
