@@ -1,9 +1,7 @@
 app = "meridian-signal-service"
 
-[build]
-  image = ""
-
 [env]
+  APP_ENV = "production"
   DATABASE_URL = "{{DATABASE_URL}}"
   REDIS_URL = "{{REDIS_URL}}"
   JWT_SIGNING_KEY = "{{JWT_SIGNING_KEY}}"
@@ -12,7 +10,23 @@ app = "meridian-signal-service"
 [[services]]
   internal_port = 8000
   protocol = "tcp"
-  ports = [{port = 8000, handlers = ["http"]}]
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.http_checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "10s"
+    method = "get"
+    path = "/healthz"
+    protocol = "http"
+    tls_skip_verify = false
 
 [experimental]
   auto_rollback = true

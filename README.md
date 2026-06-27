@@ -4,6 +4,31 @@
 
 Meridian Signal Service is a Python FastAPI microservice that provides the data and intelligence backbone for Meridian Signals® and Meridian Data®. It exposes authenticated APIs for listings, market reports, signals, comps, and asynchronous report generation.
 
+## Production deployment
+
+This service should be deployed to a container host (not Vercel). The recommended default is **Fly.io** because this repository already includes a production `Dockerfile` and `deploy/fly.toml` config.
+
+### Fly.io quick start
+
+1. Install and authenticate Fly CLI:
+   ```bash
+   fly auth login
+   ```
+2. Create/select the Fly app (if not already created):
+   ```bash
+   fly launch --no-deploy --config deploy/fly.toml
+   ```
+3. Set required secrets:
+   ```bash
+   fly secrets set DATABASE_URL=... REDIS_URL=... JWT_SIGNING_KEY=... WIX_HMAC_SECRET=...
+   ```
+4. Deploy:
+   ```bash
+   fly deploy --config deploy/fly.toml
+   ```
+
+The service exposes `/healthz` for health checks and listens on internal port `8000`.
+
 ## Getting Started
 
 ### Requirements
