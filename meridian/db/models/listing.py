@@ -20,7 +20,9 @@ class Listing(Base):
 
     __tablename__ = "listings"
 
-    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
+    )
     source: Mapped[str] = mapped_column(String(50), nullable=False)
     source_id: Mapped[str] = mapped_column(String(100), nullable=False)
     mls_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -31,8 +33,12 @@ class Listing(Base):
     zip: Mapped[str] = mapped_column(String(5), nullable=False)
     zip4: Mapped[str | None] = mapped_column(String(10), nullable=True)
     county: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    geom: Mapped[Point | None] = mapped_column(Geometry("POINT", srid=4326), nullable=True)
-    property_type: Mapped[PropertyType] = mapped_column(Enum(PropertyType), nullable=False)
+    geom: Mapped[Point | None] = mapped_column(
+        Geometry("POINT", srid=4326), nullable=True
+    )
+    property_type: Mapped[PropertyType] = mapped_column(
+        Enum(PropertyType), nullable=False
+    )
     beds: Mapped[int | None] = mapped_column(Integer, nullable=True)
     baths: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)
     living_sqft: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -46,5 +52,12 @@ class Listing(Base):
     days_on_market: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     photos: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     raw: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )

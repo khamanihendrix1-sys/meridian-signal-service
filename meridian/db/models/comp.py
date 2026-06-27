@@ -17,17 +17,35 @@ class Comp(Base):
 
     __tablename__ = "comps"
 
-    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    subject_listing_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("listings.id", ondelete="CASCADE"), nullable=False)
-    comp_listing_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("listings.id", ondelete="CASCADE"), nullable=False)
-    job_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("comp_jobs.id", ondelete="CASCADE"), nullable=False)
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
+    )
+    subject_listing_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("listings.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    comp_listing_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("listings.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    job_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("comp_jobs.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     distance_miles: Mapped[float] = mapped_column(Float, nullable=False)
     sold_date_delta_days: Mapped[int] = mapped_column(Integer, nullable=False)
     raw_similarity: Mapped[float] = mapped_column(Float, nullable=False)
-    adjustments: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    adjustments: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     adjusted_price: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     rank: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
     subject_listing = relationship("Listing", foreign_keys=[subject_listing_id])
     comp_listing = relationship("Listing", foreign_keys=[comp_listing_id])
     job = relationship("CompJob", back_populates="comps")

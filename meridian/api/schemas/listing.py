@@ -12,6 +12,7 @@ from meridian.db.models.enums import GeoType, ListingStatus, PropertyType
 
 class ListingBase(BaseModel):
     """Base schema for listing data."""
+
     source: str
     source_id: str
     mls_number: str | None = None
@@ -46,11 +47,13 @@ class ListingBase(BaseModel):
 
 class ListingResponse(ListingBase):
     """Response schema for listing data."""
+
     id: UUID
 
 
 class ListingCreate(BaseModel):
     """Schema for creating a listing."""
+
     source: str
     source_id: str
     mls_number: str | None = None
@@ -80,6 +83,7 @@ class ListingCreate(BaseModel):
 
 class ListingSearchFilters(BaseModel):
     """Filters for listing search."""
+
     geography: str | None = None
     geo_type: GeoType | None = None
     property_types: list[PropertyType] | None = None
@@ -92,6 +96,7 @@ class ListingSearchFilters(BaseModel):
 
 class ListingSearchRequest(BaseModel):
     """Request schema for listing search."""
+
     filters: ListingSearchFilters = Field(default_factory=ListingSearchFilters)
     limit: int = Field(default=50, ge=1, le=500)
     offset: int = Field(default=0, ge=0)
@@ -99,6 +104,7 @@ class ListingSearchRequest(BaseModel):
 
 class NearbySearchRequest(BaseModel):
     """Request schema for nearby listing search."""
+
     lat: float = Field(..., ge=-90, le=90)
     lon: float = Field(..., ge=-180, le=180)
     radius_miles: float = Field(..., gt=0, le=50)

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Sequence
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -23,7 +22,9 @@ async def create_comp_job(
     """Create a comp job and enqueue async computation."""
     repo = CompRepository(db)
     job = await repo.create_job(request.subject_listing_id)
-    compute_comps_task.delay(str(job.id), str(request.subject_listing_id), request.limit)
+    compute_comps_task.delay(
+        str(job.id), str(request.subject_listing_id), request.limit
+    )
     return CompJobResponse.from_orm(job)
 
 

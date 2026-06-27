@@ -12,6 +12,7 @@ from meridian.db.models.enums import GeoType
 
 class MarketReportBase(BaseModel):
     """Base schema for market report data."""
+
     geography: str
     geo_type: GeoType
     report_date: date
@@ -33,11 +34,13 @@ class MarketReportBase(BaseModel):
 
 class MarketReportResponse(MarketReportBase):
     """Response schema for market report data."""
+
     id: UUID
 
 
 class MarketReportRefreshRequest(BaseModel):
     """Request schema for refreshing market reports."""
+
     geography: str
     geo_type: GeoType
     as_of: date | None = None

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from meridian.adapters import registry
 from meridian.db.models import MarketReport
 from meridian.db.repositories import MarketReportRepository
-from meridian.hooks import MARKET_REPORT_REFRESH_COMPLETE, MARKET_REPORT_REFRESH_START, trigger_hook
+from meridian.hooks import MARKET_REPORT_REFRESH_START, trigger_hook
 
 
 class MarketReportService:
@@ -26,6 +26,7 @@ class MarketReportService:
     ) -> MarketReport | None:
         """Get the latest market report for a geography."""
         from meridian.db.models.enums import GeoType
+
         geo_type_enum = GeoType(geo_type)
         return await self.repo.get_latest(geography=geography, geo_type=geo_type_enum)
 
@@ -38,6 +39,7 @@ class MarketReportService:
     ) -> MarketReport:
         """Refresh market report by calling the resolved adapter."""
         from meridian.db.models.enums import GeoType
+
         geo_type_enum = GeoType(geo_type)
         as_of_date = as_of or date.today()
 

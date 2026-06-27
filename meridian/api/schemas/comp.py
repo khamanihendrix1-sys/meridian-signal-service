@@ -12,12 +12,14 @@ from meridian.db.models.enums import CompJobStatus
 
 class CompRequest(BaseModel):
     """Request schema for comp job creation."""
+
     subject_listing_id: UUID
     limit: int = Field(default=10, ge=1, le=50)
 
 
 class CompResponse(BaseModel):
     """Response schema for a computed comparable."""
+
     id: UUID
     job_id: UUID
     subject_listing_id: UUID
@@ -35,6 +37,7 @@ class CompResponse(BaseModel):
 
 class CompJobResponse(BaseModel):
     """Response schema for a comp job status."""
+
     id: UUID
     subject_listing_id: UUID
     status: CompJobStatus

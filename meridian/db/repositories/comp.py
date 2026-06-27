@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from meridian.db.models import Comp, CompJob
@@ -25,7 +25,11 @@ class CompRepository:
 
     async def create_job(self, subject_listing_id: UUID) -> CompJob:
         """Create a new comp job record."""
-        job = CompJob(subject_listing_id=subject_listing_id, status=CompJobStatus.PENDING, comp_ids=[])
+        job = CompJob(
+            subject_listing_id=subject_listing_id,
+            status=CompJobStatus.PENDING,
+            comp_ids=[],
+        )
         self.session.add(job)
         await self.session.commit()
         await self.session.refresh(job)
@@ -45,7 +49,11 @@ class CompRepository:
             job.comp_ids = [str(comp_id) for comp_id in comp_ids]
         job.error = error
         job.updated_at = datetime.utcnow()
-        job.completed_at = datetime.utcnow() if status in {CompJobStatus.SUCCESS, CompJobStatus.FAILED} else None
+        job.completed_at = (
+            datetime.utcnow()
+            if status in {CompJobStatus.SUCCESS, CompJobStatus.FAILED}
+            else None
+        )
         await self.session.commit()
         await self.session.refresh(job)
         return job

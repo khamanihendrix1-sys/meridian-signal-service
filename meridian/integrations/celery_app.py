@@ -9,9 +9,7 @@ celery_app.conf.task_serializer = "json"
 celery_app.conf.result_serializer = "json"
 celery_app.conf.accept_content = ["json"]
 celery_app.conf.result_expires = 3600
-
-# Import tasks so Celery can discover them when the worker starts.
-import meridian.integrations.tasks  # noqa: F401
+celery_app.autodiscover_tasks(["meridian.integrations"])
 
 
 def run_worker() -> None:

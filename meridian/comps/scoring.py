@@ -15,6 +15,7 @@ class CompAdjustment(TypedDict):
 @dataclass
 class CompScore:
     """Score and adjustment result for a candidate comparable."""
+
     distance_miles: float
     sold_date_delta_days: int
     raw_similarity: float
@@ -61,9 +62,23 @@ def score_comparable(
     distance_score = max(0.0, 1.0 - (distance_miles / 10.0))
     price_ratio = float(candidate_price / subject_price) if subject_price > 0 else 1.0
     price_score = max(0.0, 1.0 - abs(price_ratio - 1.0))
-    bed_score = 1.0 if subject_beds == candidate_beds else max(0.0, 1.0 - abs((subject_beds or 0) - (candidate_beds or 0)) * 0.1)
-    bath_score = 1.0 if subject_baths == candidate_baths else max(0.0, 1.0 - abs((subject_baths or 0.0) - (candidate_baths or 0.0)) * 0.1)
-    sqft_score = 1.0 if subject_sqft and candidate_sqft and subject_sqft == candidate_sqft else max(0.0, 1.0 - abs((subject_sqft or 0) - (candidate_sqft or 0)) / 1000.0)
+    bed_score = (
+        1.0
+        if subject_beds == candidate_beds
+        else max(0.0, 1.0 - abs((subject_beds or 0) - (candidate_beds or 0)) * 0.1)
+    )
+    bath_score = (
+        1.0
+        if subject_baths == candidate_baths
+        else max(
+            0.0, 1.0 - abs((subject_baths or 0.0) - (candidate_baths or 0.0)) * 0.1
+        )
+    )
+    sqft_score = (
+        1.0
+        if subject_sqft and candidate_sqft and subject_sqft == candidate_sqft
+        else max(0.0, 1.0 - abs((subject_sqft or 0) - (candidate_sqft or 0)) / 1000.0)
+    )
     recency_score = max(0.0, 1.0 - (sold_date_delta_days / 365.0))
 
     raw_similarity = (
@@ -76,15 +91,37 @@ def score_comparable(
     )
 
     if distance_miles > 2.0:
-        adjustments.append({"factor": "distance", "delta": -5000, "reason": "distance greater than 2 miles"})
+        adjustments.append(
+            {
+                "factor": "distance",
+                "delta": -5000,
+                "reason": "distance greater than 2 miles",
+            }
+        )
     if price_ratio > 1.05:
-        adjustments.append({"factor": "price", "delta": -10000, "reason": "candidate priced above subject"})
+        adjustments.append(
+            {
+                "factor": "price",
+                "delta": -10000,
+                "reason": "candidate priced above subject",
+            }
+        )
     elif price_ratio < 0.95:
-        adjustments.append({"factor": "price", "delta": 10000, "reason": "candidate priced below subject"})
+        adjustments.append(
+            {
+                "factor": "price",
+                "delta": 10000,
+                "reason": "candidate priced below subject",
+            }
+        )
     if subject_sqft and candidate_sqft and abs(subject_sqft - candidate_sqft) > 250:
-        adjustments.append({"factor": "sqft", "delta": -5000, "reason": "significant sqft difference"})
+        adjustments.append(
+            {"factor": "sqft", "delta": -5000, "reason": "significant sqft difference"}
+        )
     if subject_beds and candidate_beds and abs(subject_beds - candidate_beds) > 1:
-        adjustments.append({"factor": "beds", "delta": -7500, "reason": "bedroom count differs"})
+        adjustments.append(
+            {"factor": "beds", "delta": -7500, "reason": "bedroom count differs"}
+        )
 
     adjustment_total = sum(item["delta"] for item in adjustments)
     adjusted_price = candidate_price + Decimal(str(adjustment_total))

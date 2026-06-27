@@ -72,7 +72,9 @@ def on_market_report_refresh_start(
     **payload: Any,
 ) -> None:
     """Log when market report refresh begins."""
-    logger.info(f"📊 Market report refresh started for {geography} ({geo_type}) as of {as_of}")
+    logger.info(
+        f"📊 Market report refresh started for {geography} ({geo_type}) as of {as_of}"
+    )
 
 
 def on_market_report_refresh_complete(
@@ -82,7 +84,9 @@ def on_market_report_refresh_complete(
     **payload: Any,
 ) -> None:
     """Log when market report refresh completes."""
-    logger.info(f"✓ Market report refresh completed for {geography} ({geo_type}), report_id={report_id}")
+    logger.info(
+        f"✓ Market report refresh completed for {geography} ({geo_type}), report_id={report_id}"
+    )
 
 
 # ============================================================================
@@ -97,7 +101,9 @@ def on_comp_compute_start(
     **payload: Any,
 ) -> None:
     """Log when comp computation begins."""
-    logger.info(f"🔍 Starting comp computation: job_id={job_id}, subject={subject_listing_id}, limit={limit}")
+    logger.info(
+        f"🔍 Starting comp computation: job_id={job_id}, subject={subject_listing_id}, limit={limit}"
+    )
 
 
 def on_comp_compute_complete(
@@ -142,7 +148,9 @@ async def on_signal_run_complete(
     **payload: Any,
 ) -> None:
     """Async hook for signal run completion."""
-    logger.info(f"✓ Signal evaluation completed for {geography} ({geo_type}): {log_count} logs created")
+    logger.info(
+        f"✓ Signal evaluation completed for {geography} ({geo_type}): {log_count} logs created"
+    )
 
 
 # ============================================================================

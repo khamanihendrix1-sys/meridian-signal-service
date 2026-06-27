@@ -20,12 +20,29 @@ class CompJob(Base):
 
     __tablename__ = "comp_jobs"
 
-    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
-    subject_listing_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("listings.id", ondelete="CASCADE"), nullable=False)
-    status: Mapped[CompJobStatus] = mapped_column(Enum(CompJobStatus), nullable=False, default=CompJobStatus.PENDING)
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
+    )
+    subject_listing_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("listings.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    status: Mapped[CompJobStatus] = mapped_column(
+        Enum(CompJobStatus), nullable=False, default=CompJobStatus.PENDING
+    )
     comp_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     error: Mapped[str | None] = mapped_column(String(1024), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     comps: Mapped[list[Comp]] = relationship("Comp", back_populates="job")

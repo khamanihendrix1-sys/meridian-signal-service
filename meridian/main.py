@@ -61,7 +61,9 @@ def create_app() -> FastAPI:
         await trigger_hook(APP_SHUTDOWN)
 
     @app.exception_handler(Exception)
-    async def internal_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    async def internal_exception_handler(
+        request: Request, exc: Exception
+    ) -> JSONResponse:
         logger.exception("Unhandled exception", exc_info=exc)
         return JSONResponse(
             status_code=500,

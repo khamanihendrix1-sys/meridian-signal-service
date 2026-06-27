@@ -10,6 +10,7 @@ from meridian.db.models import MarketReport
 @dataclass
 class SignalResult:
     """Result of a signal evaluation."""
+
     raw_value: float
     computed_output: dict[str, Any]
     confidence: float

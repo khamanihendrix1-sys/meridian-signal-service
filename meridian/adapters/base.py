@@ -12,6 +12,7 @@ from shapely.geometry import Point
 
 class Capability(StrEnum):
     """Capabilities that market adapters may support."""
+
     LISTINGS = "LISTINGS"
     SOLD_HISTORY = "SOLD_HISTORY"
     GEO_SEARCH = "GEO_SEARCH"
@@ -21,6 +22,7 @@ class Capability(StrEnum):
 @dataclass
 class RawListing:
     """Raw listing data from an adapter, before transformation to internal models."""
+
     source_id: str
     mls_number: str | None
     address: str
@@ -49,6 +51,7 @@ class RawListing:
 @dataclass
 class RawMarketMetrics:
     """Raw market metrics from an adapter."""
+
     median_price: Decimal
     mean_price: Decimal
     active_listings: int

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from typing import Sequence
 from uuid import uuid4
@@ -11,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from meridian.db.models import MarketReport, SignalDefinition, SignalLog
 from meridian.db.repositories import MarketReportRepository
 from meridian.services.market_report import MarketReportService
-from meridian.settings import settings
 from meridian.signals.base import SignalEngine, SignalEvaluator
 
 
@@ -41,12 +39,14 @@ class PersistentSignalEngine(SignalEngine):
 
         # Get all signal definitions
         from sqlalchemy import select
+
         stmt = select(SignalDefinition)
         result = await self.session.execute(stmt)
         definitions = result.scalars().all()
 
         # Get historical market data
         from meridian.db.models.enums import GeoType
+
         geo_type_enum = GeoType(geo_type)
         history = await self.market_repo.get_reports_for_geography(
             geography=geography,
@@ -77,7 +77,9 @@ class PersistentSignalEngine(SignalEngine):
         acquired = await self.redis.set(lock_key, "1", ex=3600, nx=True)
         if not acquired:
             # Already running or ran recently
-            raise ValueError(f"Signal {definition.name} already running for {geography}")
+            raise ValueError(
+                f"Signal {definition.name} already running for {geography}"
+            )
 
         try:
             # Evaluate signal
