@@ -25,8 +25,7 @@ async def test_signal_scheduler_runs_geographies_with_concurrency_limit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        scheduler_module.Redis,
-        "from_url",
+        "meridian.signals.scheduler.Redis.from_url",
         lambda _url: _DummyRedis(),
     )
     monkeypatch.setattr(
