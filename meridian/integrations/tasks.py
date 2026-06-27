@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 from uuid import UUID
-
-from celery import Task
 
 from meridian.comps.engine import CompEngine
 from meridian.db.models.enums import CompJobStatus
@@ -12,8 +11,7 @@ from meridian.db.session import async_session_factory
 from meridian.integrations.celery_app import celery_app
 
 
-@celery_app.task(name="meridian.comps.compute_comps", bind=True, max_retries=3)
-def compute_comps_task(self: Task, job_id: str, subject_listing_id: str, limit: int = 10) -> None:
+def _compute_comps_task(self: Any, job_id: str, subject_listing_id: str, limit: int = 10) -> None:
     """Compute comps asynchronously for a job."""
 
     async def work() -> None:
@@ -36,3 +34,10 @@ def compute_comps_task(self: Task, job_id: str, subject_listing_id: str, limit: 
                 raise
 
     asyncio.run(work())
+
+
+compute_comps_task = celery_app.task(
+    name="meridian.comps.compute_comps",
+    bind=True,
+    max_retries=3,
+)(_compute_comps_task)

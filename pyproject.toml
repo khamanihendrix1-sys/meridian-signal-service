@@ -82,8 +82,8 @@ module = [
   "celery",
   "redis",
   "redis.*",
-  "apscheduler",
   "apscheduler.*",
+  "psutil",
 ]
 ignore_missing_imports = true
 

@@ -1,18 +1,11 @@
-"""
-Performance Tests for End-to-End Workflows
-
-Tests performance characteristics of complete workflows under various loads
-and conditions to ensure the system meets performance requirements.
-"""
-
 import asyncio
-import time
-import statistics
-from typing import List, Dict, Any, Tuple
-import pytest
-from concurrent.futures import ThreadPoolExecutor
-import psutil
 import os
+import statistics
+import time
+from typing import Any
+
+import psutil
+import pytest
 
 from tests.e2e.test_end_to_end import WebhookSimulator
 
@@ -21,13 +14,10 @@ class PerformanceMetrics:
     """Collect and analyze performance metrics."""
 
     def __init__(self) -> None:
-        self.metrics: Dict[str, Any] = {
-            "response_times": [],
-            "throughput": [],
-            "memory_usage": [],
-            "cpu_usage": [],
-            "error_rate": 0.0
-        }
+        self.response_times: list[float] = []
+        self.memory_usage: list[float] = []
+        self.cpu_usage: list[float] = []
+        self.error_count = 0
         self.start_time: float | None = None
         self.end_time: float | None = None
 
@@ -41,50 +31,58 @@ class PerformanceMetrics:
 
     def add_response_time(self, response_time: float) -> None:
         """Add a response time measurement."""
-        self.metrics["response_times"].append(response_time)
+        self.response_times.append(response_time)
 
     def add_memory_usage(self, memory_mb: float) -> None:
         """Add memory usage measurement."""
-        self.metrics["memory_usage"].append(memory_mb)
+        self.memory_usage.append(memory_mb)
 
     def add_cpu_usage(self, cpu_percent: float) -> None:
         """Add CPU usage measurement."""
-        self.metrics["cpu_usage"].append(cpu_percent)
+        self.cpu_usage.append(cpu_percent)
 
     def increment_error_count(self) -> None:
         """Increment error count."""
-        self.metrics["error_rate"] += 1
+        self.error_count += 1
 
     def get_summary(self) -> Dict[str, Any]:
         """Get performance summary statistics."""
-        response_times: List[float] = self.metrics["response_times"]
-
-        if not response_times:
+        if not self.response_times:
             return {"error": "No measurements collected"}
 
-        summary: Dict[str, Any] = {
-            "total_duration": self.end_time - self.start_time if self.end_time else 0,
-            "total_requests": len(response_times),
+        total_duration = (
+            self.end_time - self.start_time
+            if self.start_time is not None and self.end_time is not None
+            else 0.0
+        )
+
+        summary: dict[str, Any] = {
+            "total_duration": total_duration,
+            "total_requests": len(self.response_times),
             "response_time": {
-                "min": min(response_times),
-                "max": max(response_times),
-                "mean": statistics.mean(response_times),
-                "median": statistics.median(response_times),
-                "p95": statistics.quantiles(response_times, n=20)[18],  # 95th percentile
-                "p99": statistics.quantiles(response_times, n=100)[98] if len(response_times) >= 100 else max(response_times)
+                "min": min(self.response_times),
+                "max": max(self.response_times),
+                "mean": statistics.mean(self.response_times),
+                "median": statistics.median(self.response_times),
+                "p95": statistics.quantiles(self.response_times, n=20)[18],  # 95th percentile
+                "p99": (
+                    statistics.quantiles(self.response_times, n=100)[98]
+                    if len(self.response_times) >= 100
+                    else max(self.response_times)
+                ),
             },
             "throughput": {
-                "requests_per_second": len(response_times) / (self.end_time - self.start_time) if self.end_time else 0
+                "requests_per_second": len(self.response_times) / total_duration if total_duration > 0 else 0.0
             },
             "memory_usage": {
-                "avg_mb": statistics.mean(self.metrics["memory_usage"]) if self.metrics["memory_usage"] else 0,
-                "max_mb": max(self.metrics["memory_usage"]) if self.metrics["memory_usage"] else 0
+                "avg_mb": statistics.mean(self.memory_usage) if self.memory_usage else 0.0,
+                "max_mb": max(self.memory_usage) if self.memory_usage else 0.0,
             },
             "cpu_usage": {
-                "avg_percent": statistics.mean(self.metrics["cpu_usage"]) if self.metrics["cpu_usage"] else 0,
-                "max_percent": max(self.metrics["cpu_usage"]) if self.metrics["cpu_usage"] else 0
+                "avg_percent": statistics.mean(self.cpu_usage) if self.cpu_usage else 0.0,
+                "max_percent": max(self.cpu_usage) if self.cpu_usage else 0.0,
             },
-            "error_rate": self.metrics["error_rate"] / len(response_times) if response_times else 0
+            "error_rate": self.error_count / len(self.response_times),
         }
 
         return summary
@@ -95,7 +93,6 @@ class LoadGenerator:
 
     def __init__(self, simulator: WebhookSimulator) -> None:
         self.simulator = simulator
-        self.executor = ThreadPoolExecutor(max_workers=10)
 
     async def generate_constant_load(self, rate_per_second: int, duration_seconds: int) -> PerformanceMetrics:
         """Generate constant load at specified rate."""
@@ -122,10 +119,10 @@ class LoadGenerator:
             batch_duration = batch_end - batch_start
 
             for result in results:
-                if isinstance(result, Exception):
-                    metrics.increment_error_count()
-                else:
+                if isinstance(result, float):
                     metrics.add_response_time(result)
+                else:
+                    metrics.increment_error_count()
 
             request_count += len(tasks)
 
@@ -153,10 +150,10 @@ class LoadGenerator:
 
             # Record metrics
             for result in results:
-                if isinstance(result, Exception):
-                    metrics.increment_error_count()
-                else:
+                if isinstance(result, float):
                     metrics.add_response_time(result)
+                else:
+                    metrics.increment_error_count()
 
             # Monitor resources
             metrics.add_memory_usage(self._get_memory_usage())
@@ -192,10 +189,10 @@ class LoadGenerator:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
 
                 for result in results:
-                    if isinstance(result, Exception):
-                        metrics.increment_error_count()
-                    else:
+                    if isinstance(result, float):
                         metrics.add_response_time(result)
+                    else:
+                        metrics.increment_error_count()
 
                 requests_in_step += len(tasks)
 
@@ -218,7 +215,7 @@ class LoadGenerator:
             payload = self.simulator.create_signal_webhook_payload()
 
             # Simulate processing (this would normally be an HTTP request)
-            processed_data = self.simulator.simulate_wix_webhook_processing(payload)
+            self.simulator.simulate_wix_webhook_processing(payload)
 
             # Simulate some processing delay (mimic real API call)
             await asyncio.sleep(0.001)  # 1ms simulated processing
@@ -226,18 +223,18 @@ class LoadGenerator:
             response_time = time.time() - start_time
             return response_time
 
-        except Exception as e:
+        except Exception:
             # Return negative response time to indicate error
             return -1.0
 
     def _get_memory_usage(self) -> float:
         """Get current memory usage in MB."""
         process = psutil.Process(os.getpid())
-        return process.memory_info().rss / 1024 / 1024
+        return float(process.memory_info().rss) / 1024 / 1024
 
     def _get_cpu_usage(self) -> float:
         """Get current CPU usage percentage."""
-        return psutil.cpu_percent(interval=0.1)
+        return float(psutil.cpu_percent(interval=0.1))
 
 
 @pytest.mark.asyncio
@@ -348,16 +345,15 @@ class TestSystemPerformance:
     async def test_concurrent_user_simulation(self) -> None:
         """Simulate multiple concurrent users."""
         simulator = WebhookSimulator()
-        load_gen = LoadGenerator(simulator)
 
         # Simulate 5 concurrent users, each sending 10 requests over 30 seconds
-        async def user_simulation(user_id: int) -> List[float]:
-            response_times: List[float] = []
-            for i in range(10):
+        async def user_simulation(user_id: int) -> list[float]:
+            response_times: list[float] = []
+            for _ in range(10):
                 start_time = time.time()
                 try:
                     payload = simulator.create_signal_webhook_payload()
-                    processed = simulator.simulate_wix_webhook_processing(payload)
+                    simulator.simulate_wix_webhook_processing(payload)
                     await asyncio.sleep(0.01)  # Simulate network delay
                     response_time = time.time() - start_time
                     response_times.append(response_time)
@@ -370,13 +366,11 @@ class TestSystemPerformance:
             return response_times
 
         # Run concurrent user simulations
-        start_time = time.time()
         tasks = [user_simulation(i) for i in range(5)]
         results = await asyncio.gather(*tasks)
-        end_time = time.time()
 
         # Analyze results
-        all_response_times: List[float] = []
+        all_response_times: list[float] = []
         error_count = 0
 
         for user_results in results:
@@ -459,7 +453,7 @@ class TestPerformanceBenchmarks:
 
         for i in range(1000):
             payload = simulator.create_signal_webhook_payload()
-            processed = simulator.simulate_wix_webhook_processing(payload)
+            simulator.simulate_wix_webhook_processing(payload)
 
         end_time = time.time()
         total_time = end_time - start_time
@@ -482,7 +476,7 @@ class TestPerformanceBenchmarks:
         # Process many webhooks
         for i in range(5000):
             payload = simulator.create_signal_webhook_payload()
-            processed = simulator.simulate_wix_webhook_processing(payload)
+            simulator.simulate_wix_webhook_processing(payload)
 
         final_memory = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
         memory_increase = final_memory - initial_memory

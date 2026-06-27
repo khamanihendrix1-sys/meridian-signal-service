@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, Date, DateTime, Enum, Integer, Numeric, String, func
@@ -31,5 +32,5 @@ class MarketReport(Base):
     yoy_price_change: Mapped[float] = mapped_column(Numeric(8, 4), nullable=False)
     mom_price_change: Mapped[float] = mapped_column(Numeric(8, 4), nullable=False)
     list_to_sold_ratio: Mapped[float] = mapped_column(Numeric(8, 4), nullable=False)
-    raw_metrics: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    raw_metrics: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
