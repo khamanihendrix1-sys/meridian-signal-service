@@ -5,6 +5,7 @@ from enum import StrEnum
 
 class PropertyType(StrEnum):
     """Property type identifiers used consistently across the domain."""
+
     SFR = "SFR"
     CONDO = "CONDO"
     TOWNHOUSE = "TOWNHOUSE"
@@ -14,6 +15,7 @@ class PropertyType(StrEnum):
 
 class ListingStatus(StrEnum):
     """Valid listing lifecycle states."""
+
     ACTIVE = "ACTIVE"
     PENDING = "PENDING"
     SOLD = "SOLD"
@@ -23,6 +25,7 @@ class ListingStatus(StrEnum):
 
 class GeoType(StrEnum):
     """Geography type identifiers for spatial reports and signals."""
+
     METRO = "METRO"
     ZIP = "ZIP"
     COUNTY = "COUNTY"
@@ -32,6 +35,7 @@ class GeoType(StrEnum):
 
 class SignalCategory(StrEnum):
     """Signal categories for grouping signal definitions."""
+
     PRICE = "PRICE"
     INVENTORY = "INVENTORY"
     VELOCITY = "VELOCITY"
@@ -40,6 +44,7 @@ class SignalCategory(StrEnum):
 
 class CompJobStatus(StrEnum):
     """Status values for comp jobs."""
+
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     SUCCESS = "SUCCESS"

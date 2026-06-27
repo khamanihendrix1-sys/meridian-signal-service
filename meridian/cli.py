@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import logging
 
 from meridian.observability.logging import logger
 

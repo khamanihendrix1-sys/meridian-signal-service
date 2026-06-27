@@ -64,6 +64,7 @@ async def list_reports(
 ) -> Sequence[MarketReport]:
     """List recent market reports for a geography."""
     from meridian.db.models.enums import GeoType
+
     geo_type_enum = GeoType(geo_type)
     repo = MarketReportRepository(db)
     return await repo.get_reports_for_geography(

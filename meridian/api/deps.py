@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import AsyncGenerator
 
-from fastapi import Depends
-
 from meridian.db.session import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 

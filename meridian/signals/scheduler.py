@@ -73,7 +73,9 @@ class SignalScheduler:
                         geo_type=geo_type,
                         log_count=len(logs),
                     )
-                    logger.info(f"Ran signals for {geography}: {len(logs)} logs created")
+                    logger.info(
+                        f"Ran signals for {geography}: {len(logs)} logs created"
+                    )
                 except Exception as e:
                     logger.exception(f"Failed to run signals for {geography}: {e}")
 

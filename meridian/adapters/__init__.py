@@ -1,6 +1,11 @@
 """Adapters package for market data sources."""
 
-from meridian.adapters.base import Capability, MarketAdapter, RawListing, RawMarketMetrics
+from meridian.adapters.base import (
+    Capability,
+    MarketAdapter,
+    RawListing,
+    RawMarketMetrics,
+)
 from meridian.adapters.mock import MockAdapter
 from meridian.adapters.registry import AdapterRegistry
 

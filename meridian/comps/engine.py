@@ -10,7 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from meridian.comps.scoring import CompScore, haversine_distance, score_comparable
 from meridian.db.models import Comp, Listing
 from meridian.db.repositories import CompRepository, ListingRepository
-from meridian.hooks import COMP_COMPUTE_COMPLETE, COMP_COMPUTE_FAILED, COMP_COMPUTE_START, trigger_hook
+from meridian.hooks import (
+    COMP_COMPUTE_COMPLETE,
+    COMP_COMPUTE_FAILED,
+    COMP_COMPUTE_START,
+    trigger_hook,
+)
 
 
 class CompEngine:
@@ -54,17 +59,26 @@ class CompEngine:
             )
 
             candidates = [
-                listing for listing in candidate_listings
-                if listing.id != subject_listing_id and listing.status == "SOLD" and listing.sold_price is not None
+                listing
+                for listing in candidate_listings
+                if listing.id != subject_listing_id
+                and listing.status == "SOLD"
+                and listing.sold_price is not None
             ]
 
             scored_candidates: list[tuple[Listing, CompScore, int]] = []
             for listing in candidates:
-                if not listing.geom or not listing.sold_date or listing.sold_price is None:
+                if (
+                    not listing.geom
+                    or not listing.sold_date
+                    or listing.sold_price is None
+                ):
                     continue
 
                 candidate_point = to_shape(listing.geom)
-                distance = haversine_distance(subject_lat, subject_lon, candidate_point.y, candidate_point.x)
+                distance = haversine_distance(
+                    subject_lat, subject_lon, candidate_point.y, candidate_point.x
+                )
                 days_delta = (datetime.utcnow().date() - listing.sold_date).days
                 score = score_comparable(
                     subject_price=subject.list_price,
@@ -80,7 +94,9 @@ class CompEngine:
                 )
                 scored_candidates.append((listing, score, days_delta))
 
-            scored_candidates.sort(key=lambda item: item[1].raw_similarity, reverse=True)
+            scored_candidates.sort(
+                key=lambda item: item[1].raw_similarity, reverse=True
+            )
             selected = scored_candidates[:limit]
 
             persisted: list[Comp] = []
@@ -134,6 +150,8 @@ class CompEngine:
             )
             raise
 
-    async def compute_for_subject_sync(self, subject_listing_id: UUID, job_id: UUID, limit: int = 10) -> Sequence[Comp]:
+    async def compute_for_subject_sync(
+        self, subject_listing_id: UUID, job_id: UUID, limit: int = 10
+    ) -> Sequence[Comp]:
         """Synchronous wrapper for compute_for_subject to be used in Celery tasks."""
         return await self.compute_for_subject(subject_listing_id, job_id, limit)

@@ -5,7 +5,6 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from meridian.db.models import Listing
 from meridian.db.models.enums import GeoType
@@ -83,9 +82,13 @@ class ListingRepository:
         # ST_DWithin uses meters, convert miles to meters
         radius_meters = radius_miles * 1609.34
 
-        stmt = select(Listing).where(
-            Listing.geom.ST_DWithin(f"SRID=4326;POINT({lon} {lat})", radius_meters)
-        ).limit(limit)
+        stmt = (
+            select(Listing)
+            .where(
+                Listing.geom.ST_DWithin(f"SRID=4326;POINT({lon} {lat})", radius_meters)
+            )
+            .limit(limit)
+        )
 
         result = await self.session.execute(stmt)
         return result.scalars().all()

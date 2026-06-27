@@ -20,9 +20,7 @@ class PriceDrop30dEvaluator(SignalEvaluator):
         """Evaluate price drop over 30 days."""
         cutoff = date.today() - timedelta(days=30)
         recent_reports = [
-            r for r in history
-            if r.report_date >= cutoff
-            and r.median_price is not None
+            r for r in history if r.report_date >= cutoff and r.median_price is not None
         ]
 
         if len(recent_reports) < 2:
@@ -41,7 +39,9 @@ class PriceDrop30dEvaluator(SignalEvaluator):
         if oldest_price == 0:
             price_change_pct = 0.0
         else:
-            price_change_pct = float(((newest_price - oldest_price) / oldest_price) * 100)
+            price_change_pct = float(
+                ((newest_price - oldest_price) / oldest_price) * 100
+            )
 
         threshold = -5.0
         fired = price_change_pct <= threshold

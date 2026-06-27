@@ -45,7 +45,7 @@ class PerformanceMetrics:
         """Increment error count."""
         self.error_count += 1
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get performance summary statistics."""
         if not self.response_times:
             return {"error": "No measurements collected"}
@@ -64,7 +64,9 @@ class PerformanceMetrics:
                 "max": max(self.response_times),
                 "mean": statistics.mean(self.response_times),
                 "median": statistics.median(self.response_times),
-                "p95": statistics.quantiles(self.response_times, n=20)[18],  # 95th percentile
+                "p95": statistics.quantiles(self.response_times, n=20)[
+                    18
+                ],  # 95th percentile
                 "p99": (
                     statistics.quantiles(self.response_times, n=100)[98]
                     if len(self.response_times) >= 100
@@ -72,14 +74,22 @@ class PerformanceMetrics:
                 ),
             },
             "throughput": {
-                "requests_per_second": len(self.response_times) / total_duration if total_duration > 0 else 0.0
+                "requests_per_second": (
+                    len(self.response_times) / total_duration
+                    if total_duration > 0
+                    else 0.0
+                )
             },
             "memory_usage": {
-                "avg_mb": statistics.mean(self.memory_usage) if self.memory_usage else 0.0,
+                "avg_mb": (
+                    statistics.mean(self.memory_usage) if self.memory_usage else 0.0
+                ),
                 "max_mb": max(self.memory_usage) if self.memory_usage else 0.0,
             },
             "cpu_usage": {
-                "avg_percent": statistics.mean(self.cpu_usage) if self.cpu_usage else 0.0,
+                "avg_percent": (
+                    statistics.mean(self.cpu_usage) if self.cpu_usage else 0.0
+                ),
                 "max_percent": max(self.cpu_usage) if self.cpu_usage else 0.0,
             },
             "error_rate": self.error_count / len(self.response_times),
@@ -94,7 +104,9 @@ class LoadGenerator:
     def __init__(self, simulator: WebhookSimulator) -> None:
         self.simulator = simulator
 
-    async def generate_constant_load(self, rate_per_second: int, duration_seconds: int) -> PerformanceMetrics:
+    async def generate_constant_load(
+        self, rate_per_second: int, duration_seconds: int
+    ) -> PerformanceMetrics:
         """Generate constant load at specified rate."""
         metrics = PerformanceMetrics()
         metrics.start_measurement()
@@ -138,7 +150,9 @@ class LoadGenerator:
         metrics.end_measurement()
         return metrics
 
-    async def generate_burst_load(self, burst_size: int, burst_count: int, delay_between_bursts: float) -> PerformanceMetrics:
+    async def generate_burst_load(
+        self, burst_size: int, burst_count: int, delay_between_bursts: float
+    ) -> PerformanceMetrics:
         """Generate burst load patterns."""
         metrics = PerformanceMetrics()
         metrics.start_measurement()
@@ -166,7 +180,9 @@ class LoadGenerator:
         metrics.end_measurement()
         return metrics
 
-    async def generate_ramp_load(self, start_rate: int, end_rate: int, ramp_duration: int) -> PerformanceMetrics:
+    async def generate_ramp_load(
+        self, start_rate: int, end_rate: int, ramp_duration: int
+    ) -> PerformanceMetrics:
         """Generate load that ramps up over time."""
         metrics = PerformanceMetrics()
         metrics.start_measurement()
@@ -184,8 +200,14 @@ class LoadGenerator:
             step_start = time.time()
             requests_in_step = 0
 
-            while time.time() - step_start < step_duration and requests_in_step < current_rate:
-                tasks = [self._single_webhook_request() for _ in range(min(10, current_rate - requests_in_step))]
+            while (
+                time.time() - step_start < step_duration
+                and requests_in_step < current_rate
+            ):
+                tasks = [
+                    self._single_webhook_request()
+                    for _ in range(min(10, current_rate - requests_in_step))
+                ]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
 
                 for result in results:
@@ -247,20 +269,21 @@ class TestWebhookPerformance:
         simulator = WebhookSimulator()
         return LoadGenerator(simulator)
 
-    async def test_constant_load_performance(self, load_generator: LoadGenerator) -> None:
+    async def test_constant_load_performance(
+        self, load_generator: LoadGenerator
+    ) -> None:
         """Test performance under constant load."""
         # Test with 10 requests per second for 5 seconds
         metrics = await load_generator.generate_constant_load(
-            rate_per_second=10,
-            duration_seconds=5
+            rate_per_second=10, duration_seconds=5
         )
 
         summary = metrics.get_summary()
 
         # Performance assertions
         assert summary["response_time"]["mean"] < 0.1  # Average response time < 100ms
-        assert summary["response_time"]["p95"] < 0.2   # 95th percentile < 200ms
-        assert summary["error_rate"] < 0.05            # Error rate < 5%
+        assert summary["response_time"]["p95"] < 0.2  # 95th percentile < 200ms
+        assert summary["error_rate"] < 0.05  # Error rate < 5%
         assert summary["throughput"]["requests_per_second"] >= 8  # At least 8 req/sec
 
         print(f"Constant load test results: {summary}")
@@ -269,16 +292,14 @@ class TestWebhookPerformance:
         """Test performance under burst load."""
         # Test with bursts of 20 requests, 5 bursts, 1 second delay
         metrics = await load_generator.generate_burst_load(
-            burst_size=20,
-            burst_count=5,
-            delay_between_bursts=1.0
+            burst_size=20, burst_count=5, delay_between_bursts=1.0
         )
 
         summary = metrics.get_summary()
 
         # Performance assertions for burst scenarios
-        assert summary["response_time"]["max"] < 0.5   # Max response time < 500ms
-        assert summary["error_rate"] < 0.1             # Error rate < 10% under burst
+        assert summary["response_time"]["max"] < 0.5  # Max response time < 500ms
+        assert summary["error_rate"] < 0.1  # Error rate < 10% under burst
 
         print(f"Burst load test results: {summary}")
 
@@ -286,16 +307,18 @@ class TestWebhookPerformance:
         """Test performance under ramping load."""
         # Ramp from 5 to 50 requests per step over 10 seconds
         metrics = await load_generator.generate_ramp_load(
-            start_rate=5,
-            end_rate=50,
-            ramp_duration=10
+            start_rate=5, end_rate=50, ramp_duration=10
         )
 
         summary = metrics.get_summary()
 
         # Performance assertions for ramp scenarios
-        assert summary["response_time"]["p95"] < 0.3   # 95th percentile < 300ms under ramp
-        assert summary["throughput"]["requests_per_second"] >= 20  # Maintain reasonable throughput
+        assert (
+            summary["response_time"]["p95"] < 0.3
+        )  # 95th percentile < 300ms under ramp
+        assert (
+            summary["throughput"]["requests_per_second"] >= 20
+        )  # Maintain reasonable throughput
 
         print(f"Ramp load test results: {summary}")
 
@@ -305,8 +328,7 @@ class TestWebhookPerformance:
 
         # Generate sustained load
         metrics = await load_generator.generate_constant_load(
-            rate_per_second=15,
-            duration_seconds=10
+            rate_per_second=15, duration_seconds=10
         )
 
         summary = metrics.get_summary()
@@ -314,18 +336,21 @@ class TestWebhookPerformance:
         # Memory assertions
         memory_increase = summary["memory_usage"]["max_mb"] - initial_memory
         assert memory_increase < 50  # Memory increase < 50MB during test
-        assert summary["memory_usage"]["avg_mb"] < 200  # Average memory usage reasonable
+        assert (
+            summary["memory_usage"]["avg_mb"] < 200
+        )  # Average memory usage reasonable
 
-        print(f"Memory usage test - Initial: {initial_memory:.1f}MB, "
-              f"Peak: {summary['memory_usage']['max_mb']:.1f}MB, "
-              f"Increase: {memory_increase:.1f}MB")
+        print(
+            f"Memory usage test - Initial: {initial_memory:.1f}MB, "
+            f"Peak: {summary['memory_usage']['max_mb']:.1f}MB, "
+            f"Increase: {memory_increase:.1f}MB"
+        )
 
     async def test_cpu_usage_under_load(self, load_generator: LoadGenerator) -> None:
         """Test CPU usage patterns under load."""
         # Generate load
         metrics = await load_generator.generate_constant_load(
-            rate_per_second=20,
-            duration_seconds=8
+            rate_per_second=20, duration_seconds=8
         )
 
         summary = metrics.get_summary()
@@ -334,8 +359,10 @@ class TestWebhookPerformance:
         assert summary["cpu_usage"]["avg_percent"] < 80  # Average CPU < 80%
         assert summary["cpu_usage"]["max_percent"] < 95  # Peak CPU < 95%
 
-        print(f"CPU usage test - Avg: {summary['cpu_usage']['avg_percent']:.1f}%, "
-              f"Peak: {summary['cpu_usage']['max_percent']:.1f}%")
+        print(
+            f"CPU usage test - Avg: {summary['cpu_usage']['avg_percent']:.1f}%, "
+            f"Peak: {summary['cpu_usage']['max_percent']:.1f}%"
+        )
 
 
 @pytest.mark.asyncio
@@ -388,9 +415,11 @@ class TestSystemPerformance:
         assert statistics.mean(all_response_times) < 0.2  # Average < 200ms
         assert error_rate < 0.1  # Error rate < 10%
 
-        print(f"Concurrent user simulation - Users: 5, Requests: {total_requests}, "
-              f"Avg Response: {statistics.mean(all_response_times):.3f}s, "
-              f"Error Rate: {error_rate:.1%}")
+        print(
+            f"Concurrent user simulation - Users: 5, Requests: {total_requests}, "
+            f"Avg Response: {statistics.mean(all_response_times):.3f}s, "
+            f"Error Rate: {error_rate:.1%}"
+        )
 
     async def test_peak_load_handling(self) -> None:
         """Test system behavior under peak load conditions."""
@@ -399,8 +428,7 @@ class TestSystemPerformance:
 
         # Generate peak load: 50 requests/second for 10 seconds
         metrics = await load_gen.generate_constant_load(
-            rate_per_second=50,
-            duration_seconds=10
+            rate_per_second=50, duration_seconds=10
         )
 
         summary = metrics.get_summary()
@@ -412,9 +440,11 @@ class TestSystemPerformance:
         # System should maintain some throughput even under peak load
         assert summary["throughput"]["requests_per_second"] >= 20
 
-        print(f"Peak load test - Throughput: {summary['throughput']['requests_per_second']:.1f} req/sec, "
-              f"P99 Latency: {summary['response_time']['p99']:.3f}s, "
-              f"Error Rate: {summary['error_rate']:.1%}")
+        print(
+            f"Peak load test - Throughput: {summary['throughput']['requests_per_second']:.1f} req/sec, "
+            f"P99 Latency: {summary['response_time']['p99']:.3f}s, "
+            f"Error Rate: {summary['error_rate']:.1%}"
+        )
 
     async def test_recovery_after_load(self) -> None:
         """Test system recovery after high load periods."""
@@ -432,11 +462,16 @@ class TestSystemPerformance:
         recovery_summary = recovery_metrics.get_summary()
 
         # Recovery assertions
-        assert recovery_summary["response_time"]["mean"] <= high_load_summary["response_time"]["mean"] * 1.5
+        assert (
+            recovery_summary["response_time"]["mean"]
+            <= high_load_summary["response_time"]["mean"] * 1.5
+        )
         assert recovery_summary["error_rate"] <= high_load_summary["error_rate"] * 2
 
-        print(f"Recovery test - High load avg: {high_load_summary['response_time']['mean']:.3f}s, "
-              f"Recovery avg: {recovery_summary['response_time']['mean']:.3f}s")
+        print(
+            f"Recovery test - High load avg: {high_load_summary['response_time']['mean']:.3f}s, "
+            f"Recovery avg: {recovery_summary['response_time']['mean']:.3f}s"
+        )
 
 
 # Performance benchmark tests
@@ -464,8 +499,10 @@ class TestPerformanceBenchmarks:
         assert throughput > 500  # Should handle at least 500 req/sec
         assert total_time < 5.0  # Should complete within 5 seconds
 
-        print(f"Webhook processing benchmark: {throughput:.0f} req/sec, "
-              f"Total time: {total_time:.2f}s")
+        print(
+            f"Webhook processing benchmark: {throughput:.0f} req/sec, "
+            f"Total time: {total_time:.2f}s"
+        )
 
     async def test_memory_efficiency_benchmark(self) -> None:
         """Benchmark memory efficiency."""
@@ -484,4 +521,6 @@ class TestPerformanceBenchmarks:
         # Memory efficiency assertions
         assert memory_increase < 10  # Memory increase < 10MB for 5000 requests
 
-        print(f"Memory efficiency benchmark: {memory_increase:.1f}MB increase for 5000 requests")
+        print(
+            f"Memory efficiency benchmark: {memory_increase:.1f}MB increase for 5000 requests"
+        )

@@ -11,6 +11,7 @@ from meridian.db.models.enums import GeoType, SignalCategory
 
 class SignalDefinitionBase(BaseModel):
     """Base schema for signal definition data."""
+
     name: str
     category: SignalCategory
     description: str
@@ -23,11 +24,13 @@ class SignalDefinitionBase(BaseModel):
 
 class SignalDefinitionResponse(SignalDefinitionBase):
     """Response schema for signal definition data."""
+
     id: UUID
 
 
 class SignalLogBase(BaseModel):
     """Base schema for signal log data."""
+
     signal_id: UUID
     geography: str
     geo_type: GeoType
@@ -43,11 +46,13 @@ class SignalLogBase(BaseModel):
 
 class SignalLogResponse(SignalLogBase):
     """Response schema for signal log data."""
+
     id: UUID
 
 
 class SignalEvaluateRequest(BaseModel):
     """Request schema for triggering signal evaluation."""
+
     geography: str
     geo_type: GeoType
     run_id: str | None = None

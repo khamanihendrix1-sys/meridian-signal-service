@@ -18,7 +18,9 @@ class MarketReport(Base):
 
     __tablename__ = "market_reports"
 
-    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, default=uuid4
+    )
     geography: Mapped[str] = mapped_column(String(128), nullable=False)
     geo_type: Mapped[GeoType] = mapped_column(Enum(GeoType), nullable=False)
     report_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -32,5 +34,9 @@ class MarketReport(Base):
     yoy_price_change: Mapped[float] = mapped_column(Numeric(8, 4), nullable=False)
     mom_price_change: Mapped[float] = mapped_column(Numeric(8, 4), nullable=False)
     list_to_sold_ratio: Mapped[float] = mapped_column(Numeric(8, 4), nullable=False)
-    raw_metrics: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    raw_metrics: Mapped[dict[str, Any]] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

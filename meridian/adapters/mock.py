@@ -4,11 +4,16 @@ import hashlib
 import random
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, AsyncIterator
+from typing import AsyncIterator
 
 from shapely.geometry import Point
 
-from meridian.adapters.base import Capability, MarketAdapter, RawListing, RawMarketMetrics
+from meridian.adapters.base import (
+    Capability,
+    MarketAdapter,
+    RawListing,
+    RawMarketMetrics,
+)
 from meridian.db.models.enums import GeoType, ListingStatus, PropertyType
 
 
@@ -62,7 +67,9 @@ class MockAdapter(MarketAdapter):
             # Ensure it's sold and within date range
             listing.status = ListingStatus.SOLD.value
             listing.sold_date = since + timedelta(days=rng.randint(0, 365))
-            listing.sold_price = listing.list_price * Decimal(str(rng.uniform(0.95, 1.05)))
+            listing.sold_price = listing.list_price * Decimal(
+                str(rng.uniform(0.95, 1.05))
+            )
             yield listing
 
     async def fetch_market_metrics(
@@ -141,7 +148,9 @@ class MockAdapter(MarketAdapter):
 
         return RawListing(
             source_id=f"mock-{rng.randint(1000000, 9999999)}",
-            mls_number=f"MLS{rng.randint(100000, 999999)}" if rng.random() > 0.1 else None,
+            mls_number=(
+                f"MLS{rng.randint(100000, 999999)}" if rng.random() > 0.1 else None
+            ),
             address=f"{rng.randint(100, 9999)} Mock St",
             unit=f"Apt {rng.randint(1, 20)}" if rng.random() > 0.7 else None,
             city=city,
@@ -161,7 +170,9 @@ class MockAdapter(MarketAdapter):
             list_date=today - timedelta(days=rng.randint(1, 180)),
             sold_date=sold_date,
             status=status,
-            photos=[f"https://example.com/photo{i}.jpg" for i in range(rng.randint(0, 10))],
+            photos=[
+                f"https://example.com/photo{i}.jpg" for i in range(rng.randint(0, 10))
+            ],
             raw={"mock": True},
         )
 
