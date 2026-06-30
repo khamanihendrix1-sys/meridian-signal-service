@@ -5,6 +5,7 @@ description = "Meridian Signals microservice backend."
 readme = "README.md"
 authors = ["Meridian Software <hello@meridiansoftware.com>"]
 license = "MIT"
+packages = [{ include = "meridian" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
