@@ -14,7 +14,9 @@ router = APIRouter(prefix="/v1/metrics", tags=["metrics"])
 
 
 @router.get("/cache")
-async def get_cache_metrics(redis_client: Redis = Depends(get_redis)) -> Mapping[str, Any]:
+async def get_cache_metrics(
+    redis_client: Redis = Depends(get_redis),
+) -> Mapping[str, Any]:
     """Return cache and rate-limit metrics for operational monitoring."""
     redis_stats: Mapping[str, Any]
     try:
