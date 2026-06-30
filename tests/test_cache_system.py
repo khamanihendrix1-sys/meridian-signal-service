@@ -26,6 +26,7 @@ class FakeRedis:
 
     def __init__(self) -> None:
         self.store: dict[str, str] = {}
+        self.delete_calls = 0
 
     async def get(self, key: str) -> str | None:
         return self.store.get(key)
@@ -34,11 +35,14 @@ class FakeRedis:
         """Store value for tests; TTL argument is accepted for API compatibility."""
         self.store[key] = value
 
-    async def delete(self, key: str) -> int:
-        if key in self.store:
-            del self.store[key]
-            return 1
-        return 0
+    async def delete(self, *keys: str) -> int:
+        self.delete_calls += 1
+        deleted = 0
+        for key in keys:
+            if key in self.store:
+                del self.store[key]
+                deleted += 1
+        return deleted
 
     async def info(self, section: str) -> dict[str, int]:
         assert section == "stats"
@@ -73,6 +77,18 @@ async def test_cache_helpers_and_invalidation_work_with_pattern() -> None:
     deleted = await invalidate_pattern(redis_client, "market_reports*")
     assert deleted == 2
     assert cache_metrics.evictions >= 2
+
+
+@pytest.mark.asyncio
+async def test_invalidate_pattern_uses_batched_deletes() -> None:
+    redis_client = FakeRedis()
+    for index in range(205):
+        key = make_cache_key("market_reports", "latest", geography=f"City-{index}")
+        await cache_set(redis_client, key, {"value": index}, ttl_seconds=30)
+
+    deleted = await invalidate_pattern(redis_client, "market_reports*")
+    assert deleted == 205
+    assert redis_client.delete_calls == 3
 
 
 @pytest.mark.asyncio

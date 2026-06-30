@@ -9,6 +9,7 @@ from redis.asyncio import Redis
 from meridian.cache.metrics import cache_metrics
 
 logger = logging.getLogger(__name__)
+DELETE_BATCH_SIZE = 100
 
 
 class BaseCacheClient:
@@ -67,9 +68,15 @@ class BaseCacheClient:
 
         namespaced_pattern = self.namespaced_key(pattern)
         deleted = 0
+        batch: list[str] = []
         try:
             async for key in self.redis.scan_iter(match=namespaced_pattern):
-                deleted += await self.redis.delete(key)
+                batch.append(key)
+                if len(batch) >= DELETE_BATCH_SIZE:
+                    deleted += await self.redis.delete(*batch)
+                    batch.clear()
+            if batch:
+                deleted += await self.redis.delete(*batch)
             return deleted
         except Exception:
             cache_metrics.record_error()
