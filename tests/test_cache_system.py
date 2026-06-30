@@ -31,6 +31,7 @@ class FakeRedis:
         return self.store.get(key)
 
     async def set(self, key: str, value: str, ex: int) -> None:
+        """Store value for tests; TTL argument is accepted for API compatibility."""
         self.store[key] = value
 
     async def delete(self, key: str) -> int:

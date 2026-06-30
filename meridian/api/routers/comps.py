@@ -56,11 +56,16 @@ async def get_comp_job(
     if not job:
         raise HTTPException(status_code=404, detail="Comp job not found")
 
-    payload = CompJobResponse.from_orm(job)
+    comp_job_response = CompJobResponse.from_orm(job)
     if job.status == CompJobStatus.SUCCESS:
         comps = await repo.get_comps_for_job(job.id)
-        payload.comps = [CompResponse.from_orm(comp) for comp in comps]
-    await cache_set(redis_client, cache_key, payload.model_dump(mode="json"), ttl)
+        comp_job_response.comps = [CompResponse.from_orm(comp) for comp in comps]
+    await cache_set(
+        redis_client,
+        cache_key,
+        comp_job_response.model_dump(mode="json"),
+        ttl,
+    )
     response.headers["X-Cache"] = "MISS"
     response.headers["Cache-Control"] = cache_control_header(ttl)
-    return payload
+    return comp_job_response

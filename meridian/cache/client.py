@@ -39,11 +39,11 @@ class BaseCacheClient:
             return json.loads(raw)
         except (TypeError, ValueError, json.JSONDecodeError):
             cache_metrics.record_error()
-            logger.exception("Failed to decode cached payload", extra={"key": key})
+            logger.exception("Failed to decode JSON from cache", extra={"key": key})
             return None
         except Exception:
             cache_metrics.record_error()
-            logger.exception("Failed to read cached payload", extra={"key": key})
+            logger.exception("Failed to retrieve value from Redis", extra={"key": key})
             return None
 
     async def set_json(self, key: str, value: Any, ttl_seconds: int) -> bool:
