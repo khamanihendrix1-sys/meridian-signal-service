@@ -43,7 +43,7 @@ The service exposes `/healthz` for health checks (implemented in `meridian/api/r
 ### Local development
 
 1. Copy `.env.example` to `.env`
-2. Start the local stack:
+2. Start the local stack (Postgres, Redis, API, Celery worker, scheduler):
    ```bash
    docker-compose up --build
    ```
