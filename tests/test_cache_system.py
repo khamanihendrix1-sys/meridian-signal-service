@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from fnmatch import fnmatch
+from math import ceil
 from typing import Any
 
 import pytest
@@ -19,6 +20,7 @@ from meridian.cache.helpers import cache_get, cache_set
 from meridian.cache.invalidation import invalidate_pattern
 from meridian.cache.keys import make_cache_key
 from meridian.cache.metrics import cache_metrics
+from meridian.cache.client import DELETE_BATCH_SIZE
 
 
 class FakeRedis:
@@ -48,7 +50,9 @@ class FakeRedis:
         assert section == "stats"
         return {"keyspace_hits": 1, "keyspace_misses": 2, "evicted_keys": 0}
 
-    async def scan_iter(self, match: str) -> AsyncIterator[str]:
+    async def scan_iter(
+        self, match: str, count: int | None = None
+    ) -> AsyncIterator[str]:
         for key in list(self.store.keys()):
             if fnmatch(key, match):
                 yield key
@@ -88,7 +92,7 @@ async def test_invalidate_pattern_uses_batched_deletes() -> None:
 
     deleted = await invalidate_pattern(redis_client, "market_reports*")
     assert deleted == 205
-    assert redis_client.delete_calls == 3
+    assert redis_client.delete_calls == ceil(205 / DELETE_BATCH_SIZE)
 
 
 @pytest.mark.asyncio

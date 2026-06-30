@@ -70,7 +70,9 @@ class BaseCacheClient:
         deleted = 0
         batch: list[str] = []
         try:
-            async for key in self.redis.scan_iter(match=namespaced_pattern):
+            async for key in self.redis.scan_iter(
+                match=namespaced_pattern, count=DELETE_BATCH_SIZE
+            ):
                 batch.append(key)
                 if len(batch) >= DELETE_BATCH_SIZE:
                     deleted += await self.redis.delete(*batch)
