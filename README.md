@@ -49,6 +49,7 @@ The service exposes `/healthz` for health checks (implemented in `meridian/api/r
    ```
 3. Run the API server locally:
    ```bash
+   # If running outside Docker, update DATABASE_URL/REDIS_URL in .env to localhost hosts.
    poetry install
    poetry run meridian-api
    ```
