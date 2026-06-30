@@ -10,12 +10,20 @@ from redis.asyncio import Redis
 from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 
+from meridian.api.middleware.cache import (
+    CacheMetricsMiddleware,
+    RateLimitAwarenessMiddleware,
+)
+from meridian.cache.warming import warm_critical_cache
+from meridian.db.session import get_async_session_factory
 from meridian.observability.logging import configure_structlog
 from meridian.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
 middleware = [
+    Middleware(CacheMetricsMiddleware),
+    Middleware(RateLimitAwarenessMiddleware),
     Middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -31,6 +39,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     configure_structlog(settings)
     app.state.redis = Redis.from_url(settings.redis_url)
     logger.info("Application startup event")
+    warmed_keys = await warm_critical_cache(
+        app.state.redis,
+        get_async_session_factory(),
+    )
+    logger.info("Cache warmup completed", extra={"warmed_keys": warmed_keys})
     try:
         yield
     finally:
@@ -43,6 +56,7 @@ def create_app() -> FastAPI:
     from meridian.api.routers.comps import router as comps_router
     from meridian.api.routers.health import router as health_router
     from meridian.api.routers.listings import router as listings_router
+    from meridian.api.routers.cache_metrics import router as cache_metrics_router
     from meridian.api.routers.market_reports import router as market_reports_router
     from meridian.api.routers.signals import router as signals_router
 
@@ -56,6 +70,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     app.include_router(health_router, prefix="", tags=["health"])
+    app.include_router(cache_metrics_router)
     app.include_router(listings_router)
     app.include_router(market_reports_router)
     app.include_router(signals_router)

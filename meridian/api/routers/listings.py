@@ -4,14 +4,18 @@ from typing import Sequence
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from meridian.api.deps import get_db
+from meridian.api.deps import get_db, get_redis
 from meridian.api.schemas import (
     ListingResponse,
     ListingSearchRequest,
     NearbySearchRequest,
 )
+from meridian.cache.helpers import cache_control_header, cache_get, cache_set
+from meridian.cache.keys import make_cache_key
+from meridian.cache.strategies import CacheNamespace, CacheStrategy, resolve_ttl
 from meridian.db.models import Listing
 from meridian.db.models.enums import GeoType
 from meridian.db.repositories import ListingRepository
@@ -33,8 +37,33 @@ async def list_listings(
     limit: int = Query(50, ge=1, le=500),
     cursor: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
-) -> Sequence[Listing]:
+    redis_client: Redis = Depends(get_redis),
+) -> Sequence[ListingResponse]:
     """List listings with optional filters."""
+    ttl = resolve_ttl(CacheStrategy.LISTINGS_LIST)
+    cache_key = make_cache_key(
+        CacheNamespace.LISTINGS,
+        "list",
+        geography=geography,
+        geo_type=geo_type.value if geo_type else None,
+        property_types=sorted(property_types) if property_types else None,
+        min_price=min_price,
+        max_price=max_price,
+        beds=beds,
+        baths=baths,
+        status=status,
+        limit=limit,
+        cursor=cursor,
+    )
+    cached = await cache_get(redis_client, cache_key)
+    if isinstance(cached, dict):
+        payload = cached.get("items", [])
+        if cached.get("next_cursor"):
+            response.headers["X-Next-Cursor"] = str(cached["next_cursor"])
+        response.headers["X-Cache"] = "HIT"
+        response.headers["Cache-Control"] = cache_control_header(ttl)
+        return [ListingResponse.model_validate(item) for item in payload]
+
     repo = ListingRepository(db)
     listings, next_cursor = await repo.search_listings(
         geography=geography,
@@ -48,22 +77,48 @@ async def list_listings(
         limit=limit,
         cursor=cursor,
     )
+    models = [ListingResponse.model_validate(item) for item in listings]
+    await cache_set(
+        redis_client,
+        cache_key,
+        {
+            "items": [model.model_dump(mode="json") for model in models],
+            "next_cursor": next_cursor,
+        },
+        ttl,
+    )
+    response.headers["X-Cache"] = "MISS"
+    response.headers["Cache-Control"] = cache_control_header(ttl)
     if next_cursor:
         response.headers["X-Next-Cursor"] = next_cursor
-    return listings
+    return models
 
 
 @router.get("/{listing_id}", response_model=ListingResponse)
 async def get_listing(
     listing_id: UUID,
+    response: Response,
     db: AsyncSession = Depends(get_db),
-) -> Listing:
+    redis_client: Redis = Depends(get_redis),
+) -> ListingResponse:
     """Get a listing by ID."""
+    ttl = resolve_ttl(CacheStrategy.LISTING_DETAIL)
+    cache_key = make_cache_key(CacheNamespace.LISTINGS, "detail", listing_id=listing_id)
+    cached = await cache_get(redis_client, cache_key)
+    if isinstance(cached, dict):
+        response.headers["X-Cache"] = "HIT"
+        response.headers["Cache-Control"] = cache_control_header(ttl)
+        return ListingResponse.model_validate(cached)
+
     repo = ListingRepository(db)
     listing = await repo.get_by_id(listing_id)
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
-    return listing
+    payload = ListingResponse.model_validate(listing)
+    await cache_set(redis_client, cache_key, payload.model_dump(mode="json"), ttl)
+    response.headers["X-Cache"] = "MISS"
+    response.headers["Cache-Control"] = cache_control_header(ttl)
+    return payload
 
 
 @router.post("/search", response_model=list[ListingResponse])

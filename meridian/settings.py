@@ -26,6 +26,18 @@ class Settings(BaseSettings):
     s3_bucket: str | None = None
     s3_access_key: str | None = None
     s3_secret_key: str | None = None
+    cache_enabled: bool = True
+    cache_prefix: str = "meridian:api"
+    cache_default_ttl: int = 120
+    cache_warm_on_startup: bool = True
+    cache_ttl_listings_list: int = 120
+    cache_ttl_listing_detail: int = 300
+    cache_ttl_market_reports_list: int = 300
+    cache_ttl_market_report_latest: int = 900
+    cache_ttl_market_report_detail: int = 1800
+    cache_ttl_signal_definitions: int = 3600
+    cache_ttl_signal_logs: int = 120
+    cache_ttl_comp_job: int = 60
 
     @property
     def config_dir(self) -> Path:
