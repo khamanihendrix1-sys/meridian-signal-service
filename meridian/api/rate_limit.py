@@ -45,6 +45,12 @@ class _InMemoryRateLimiter:
 _fallback_limiter = _InMemoryRateLimiter()
 
 
+# Number of characters to take from the bearer token for the rate-limit key.
+# JWT headers+payloads have high entropy in the first ~50 chars, so 32 chars
+# gives sufficient key uniqueness while keeping Redis key sizes small.
+_TOKEN_KEY_PREFIX_LEN = 32
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Token-bucket style rate-limiting middleware.
 
@@ -110,8 +116,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Prefer the bearer token subject for authenticated callers
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
-            # Use the raw token as the key (avoids decoding overhead on hot path)
-            return f"token:{auth_header[7:30]}"
+            # Use a prefix of the raw token as the key (avoids JWT decode overhead
+            # on the hot path); see _TOKEN_KEY_PREFIX_LEN for the rationale.
+            return f"token:{auth_header[7 : 7 + _TOKEN_KEY_PREFIX_LEN]}"
 
         forwarded_for = request.headers.get("X-Forwarded-For")
         if forwarded_for:

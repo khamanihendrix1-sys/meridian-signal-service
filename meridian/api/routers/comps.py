@@ -57,6 +57,7 @@ _error_responses: dict[int | str, dict[str, Any]] = {
 )
 async def create_comp_job(
     request: CompRequest,
+    http_response: Response,
     db: AsyncSession = Depends(get_db),
     redis_client: Redis = Depends(get_redis),
     _token: dict[str, Any] = Depends(get_current_token),
@@ -65,7 +66,9 @@ async def create_comp_job(
     """Create a comp job and enqueue async computation."""
     repo = CompRepository(db)
 
-    # Idempotency: check if a prior job exists for this key
+    # Idempotency: when the same key is replayed, return the existing job with
+    # 200 OK rather than 202 Accepted so that the caller can distinguish a
+    # fresh submission from a replayed one.
     if idempotency_key:
         idempotency_cache_key = make_cache_key(
             CacheNamespace.COMPS,
@@ -76,6 +79,7 @@ async def create_comp_job(
         if isinstance(cached_job_id, str):
             existing_job = await repo.get_job_by_id(UUID(cached_job_id))
             if existing_job:
+                http_response.status_code = status.HTTP_200_OK
                 return CompJobResponse.from_orm(existing_job)
 
     job = await repo.create_job(request.subject_listing_id)
