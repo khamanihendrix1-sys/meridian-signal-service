@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Any, Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, status
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from meridian.api.auth import get_current_token
 from meridian.api.deps import get_db, get_redis
+from meridian.api.exceptions import NotFoundError
+from meridian.api.models.errors import ErrorCode, ErrorResponse
 from meridian.api.schemas import MarketReportRefreshRequest, MarketReportResponse
 from meridian.cache.helpers import cache_control_header, cache_get, cache_set
 from meridian.cache.invalidation import invalidate_market_reports_cache
@@ -18,14 +21,46 @@ from meridian.services import MarketReportService
 
 router = APIRouter(prefix="/v1/market-reports", tags=["market-reports"])
 
+_error_responses: dict[int | str, dict[str, Any]] = {
+    401: {
+        "model": ErrorResponse,
+        "description": "Missing or invalid authentication token",
+    },
+    404: {"model": ErrorResponse, "description": "Market report not found"},
+    422: {"model": ErrorResponse, "description": "Request validation error"},
+    429: {"model": ErrorResponse, "description": "Rate limit exceeded"},
+}
 
-@router.get("/latest", response_model=MarketReportResponse)
+
+@router.get(
+    "/latest",
+    response_model=MarketReportResponse,
+    summary="Get latest market report",
+    description=(
+        "Retrieve the most recent market report for the specified geography and "
+        "geography type. Results are cached; see ``Cache-Control`` and ``X-Cache`` "
+        "response headers."
+    ),
+    responses={
+        200: {"description": "Latest market report"},
+        **_error_responses,
+    },
+)
 async def get_latest_report(
     response: Response,
-    geography: str = Query(..., description="Geography identifier"),
-    geo_type: str = Query(..., description="Geography type (METRO, ZIP, etc.)"),
+    geography: str = Query(
+        ...,
+        description="Geography identifier (e.g. 'Austin', 'TX', '78701')",
+        examples=["Austin"],
+    ),
+    geo_type: str = Query(
+        ...,
+        description="Geography type — one of METRO, ZIP, CITY, STATE",
+        examples=["CITY"],
+    ),
     db: AsyncSession = Depends(get_db),
     redis_client: Redis = Depends(get_redis),
+    _token: dict[str, Any] = Depends(get_current_token),
 ) -> MarketReportResponse:
     """Get the latest market report for a geography."""
     ttl = resolve_ttl(CacheStrategy.MARKET_REPORT_LATEST)
@@ -44,7 +79,10 @@ async def get_latest_report(
     service = MarketReportService(db)
     report = await service.get_latest_report(geography=geography, geo_type=geo_type)
     if not report:
-        raise HTTPException(status_code=404, detail="No market report found")
+        raise NotFoundError(
+            "No market report found for the specified geography",
+            error_code=ErrorCode.MARKET_REPORT_NOT_FOUND,
+        )
     payload = MarketReportResponse.model_validate(report)
     await cache_set(redis_client, cache_key, payload.model_dump(mode="json"), ttl)
     detail_key = make_cache_key(
@@ -63,12 +101,22 @@ async def get_latest_report(
     return payload
 
 
-@router.get("/{report_id}", response_model=MarketReportResponse)
+@router.get(
+    "/{report_id}",
+    response_model=MarketReportResponse,
+    summary="Get market report by ID",
+    description="Retrieve a specific market report by its unique identifier.",
+    responses={
+        200: {"description": "Market report details"},
+        **_error_responses,
+    },
+)
 async def get_report(
     report_id: str,
     response: Response,
     db: AsyncSession = Depends(get_db),
     redis_client: Redis = Depends(get_redis),
+    _token: dict[str, Any] = Depends(get_current_token),
 ) -> MarketReportResponse:
     """Get a market report by ID."""
     ttl = resolve_ttl(CacheStrategy.MARKET_REPORT_DETAIL)
@@ -86,7 +134,10 @@ async def get_report(
     repo = MarketReportRepository(db)
     report = await repo.get_by_id(report_id)
     if not report:
-        raise HTTPException(status_code=404, detail="Market report not found")
+        raise NotFoundError(
+            "Market report not found",
+            error_code=ErrorCode.MARKET_REPORT_NOT_FOUND,
+        )
     payload = MarketReportResponse.model_validate(report)
     await cache_set(redis_client, cache_key, payload.model_dump(mode="json"), ttl)
     response.headers["X-Cache"] = "MISS"
@@ -94,11 +145,26 @@ async def get_report(
     return payload
 
 
-@router.post("/refresh", response_model=MarketReportResponse)
+@router.post(
+    "/refresh",
+    response_model=MarketReportResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Refresh market report",
+    description=(
+        "Pull fresh data from the upstream adapter for the given geography and "
+        "persist a new market report.  Invalidates the relevant cache entries."
+    ),
+    responses={
+        200: {"description": "Refreshed market report"},
+        400: {"model": ErrorResponse, "description": "Invalid geography or geo_type"},
+        **_error_responses,
+    },
+)
 async def refresh_report(
     request: MarketReportRefreshRequest,
     db: AsyncSession = Depends(get_db),
     redis_client: Redis = Depends(get_redis),
+    _token: dict[str, Any] = Depends(get_current_token),
 ) -> MarketReport:
     """Refresh market report by pulling fresh data from adapter."""
     service = MarketReportService(db)
@@ -111,14 +177,29 @@ async def refresh_report(
     return report
 
 
-@router.get("", response_model=list[MarketReportResponse])
+@router.get(
+    "",
+    response_model=list[MarketReportResponse],
+    summary="List market reports",
+    description=(
+        "Return a list of recent market reports for the specified geography. "
+        "Results are ordered by report date descending."
+    ),
+    responses={
+        200: {"description": "List of market reports"},
+        **_error_responses,
+    },
+)
 async def list_reports(
     response: Response,
     geography: str = Query(..., description="Geography identifier"),
-    geo_type: str = Query(..., description="Geography type (METRO, ZIP, etc.)"),
-    limit: int = Query(10, ge=1, le=100),
+    geo_type: str = Query(..., description="Geography type (METRO, ZIP, CITY, STATE)"),
+    limit: int = Query(
+        10, ge=1, le=100, description="Maximum number of reports to return"
+    ),
     db: AsyncSession = Depends(get_db),
     redis_client: Redis = Depends(get_redis),
+    _token: dict[str, Any] = Depends(get_current_token),
 ) -> Sequence[MarketReportResponse]:
     """List recent market reports for a geography."""
     ttl = resolve_ttl(CacheStrategy.MARKET_REPORTS_LIST)

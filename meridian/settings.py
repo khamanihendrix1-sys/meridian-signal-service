@@ -39,6 +39,25 @@ class Settings(BaseSettings):
     cache_ttl_signal_logs: int = 120
     cache_ttl_comp_job: int = 60
 
+    # CORS — comma-separated list of allowed origins.
+    # Defaults to permissive ("*") in development; must be set explicitly in
+    # production to a comma-separated list of exact origin URLs.
+    cors_allowed_origins: str = "*"
+    cors_allow_credentials: bool = False
+
+    # Rate limiting
+    rate_limit_enabled: bool = True
+    rate_limit_requests: int = 200
+    rate_limit_window_seconds: int = 60
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Return the parsed list of allowed CORS origins."""
+        raw = self.cors_allowed_origins.strip()
+        if raw == "*":
+            return ["*"]
+        return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
     @property
     def config_dir(self) -> Path:
         """Path to the config directory."""
