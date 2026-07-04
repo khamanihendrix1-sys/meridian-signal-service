@@ -97,6 +97,27 @@ class ListingRepository:
         next_cursor = self._encode_cursor(page[-1]) if has_next and page else None
         return page, next_cursor
 
+    async def count_by_status(
+        self,
+        *,
+        geography: str | None = None,
+        geo_type: GeoType | None = None,
+    ) -> dict[str, int]:
+        """Return listing counts grouped by status, optionally geo-filtered."""
+        stmt = select(Listing.status, func.count()).select_from(Listing)
+
+        if geography and geo_type:
+            if geo_type == GeoType.ZIP:
+                stmt = stmt.where(Listing.zip == geography)
+            elif geo_type == GeoType.CITY:
+                stmt = stmt.where(Listing.city == geography)
+            elif geo_type == GeoType.COUNTY:
+                stmt = stmt.where(Listing.county == geography)
+
+        stmt = stmt.group_by(Listing.status)
+        result = await self.session.execute(stmt)
+        return {str(status): int(count) for status, count in result.all()}
+
     async def search_nearby(
         self,
         *,

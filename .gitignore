@@ -14,3 +14,10 @@ venv/
 htmlcov/
 .coverage
 docker-compose.override.yml
+
+# Node / Next.js dashboard
+node_modules/
+.next/
+next-env.d.ts
+npm-debug.log*
+.vercel
