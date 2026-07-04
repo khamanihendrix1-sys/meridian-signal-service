@@ -13,6 +13,7 @@ class CacheNamespace:
     MARKET_REPORTS = "market_reports"
     SIGNALS = "signals"
     COMPS = "comps"
+    OVERVIEW = "overview"
 
 
 class CacheStrategy:
@@ -26,6 +27,7 @@ class CacheStrategy:
     SIGNAL_DEFINITIONS = "signal_definitions"
     SIGNAL_LOGS = "signal_logs"
     COMP_JOB = "comp_job"
+    OVERVIEW = "overview"
 
 
 def ttl_mapping() -> Mapping[str, int]:
@@ -41,6 +43,7 @@ def ttl_mapping() -> Mapping[str, int]:
             CacheStrategy.SIGNAL_DEFINITIONS: settings.cache_ttl_signal_definitions,
             CacheStrategy.SIGNAL_LOGS: settings.cache_ttl_signal_logs,
             CacheStrategy.COMP_JOB: settings.cache_ttl_comp_job,
+            CacheStrategy.OVERVIEW: settings.cache_ttl_overview,
         }
     )
 

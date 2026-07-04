@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     cache_ttl_signal_definitions: int = 3600
     cache_ttl_signal_logs: int = 120
     cache_ttl_comp_job: int = 60
+    cache_ttl_overview: int = 60
 
     # CORS — comma-separated list of allowed origins.
     # Defaults to permissive ("*") in development; must be set explicitly in

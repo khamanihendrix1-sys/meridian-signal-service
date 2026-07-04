@@ -92,6 +92,7 @@ def create_app() -> FastAPI:
     from meridian.api.routers.listings import router as listings_router
     from meridian.api.routers.cache_metrics import router as cache_metrics_router
     from meridian.api.routers.market_reports import router as market_reports_router
+    from meridian.api.routers.overview import router as overview_router
     from meridian.api.routers.signals import router as signals_router
 
     settings = get_settings()
@@ -115,6 +116,7 @@ def create_app() -> FastAPI:
     app.include_router(listings_router)
     app.include_router(market_reports_router)
     app.include_router(signals_router)
+    app.include_router(overview_router)
     app.include_router(comps_router)
 
     # Register exception handlers — most specific first
