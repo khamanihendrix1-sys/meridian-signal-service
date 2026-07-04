@@ -1,5 +1,5 @@
 import type * as React from "react"
-import { AlertTriangle, Inbox, PlugZap } from "lucide-react"
+import { AlertTriangle, Inbox, PlugZap, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -18,9 +18,16 @@ export function EmptyState({
 }: {
   title: string
   description?: string
-  icon?: "inbox" | "alert" | "plug"
+  icon?: "inbox" | "alert" | "plug" | "search"
 }) {
-  const Icon = icon === "alert" ? AlertTriangle : icon === "plug" ? PlugZap : Inbox
+  const Icon =
+    icon === "alert"
+      ? AlertTriangle
+      : icon === "plug"
+        ? PlugZap
+        : icon === "search"
+          ? Search
+          : Inbox
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card px-6 py-14 text-center">
       <div className="flex size-11 items-center justify-center rounded-full bg-muted">
