@@ -106,7 +106,9 @@ async def get_overview(
         log_filters.append(SignalLog.geo_type == geo_type)
 
     total_stmt = select(func.count()).select_from(SignalLog)
-    fired_stmt = select(func.count()).select_from(SignalLog).where(SignalLog.fired.is_(True))
+    fired_stmt = (
+        select(func.count()).select_from(SignalLog).where(SignalLog.fired.is_(True))
+    )
     for condition in log_filters:
         total_stmt = total_stmt.where(condition)
         fired_stmt = fired_stmt.where(condition)
@@ -114,7 +116,9 @@ async def get_overview(
     total_evaluations = int((await db.execute(total_stmt)).scalar_one())
     fired = int((await db.execute(fired_stmt)).scalar_one())
     definitions = int(
-        (await db.execute(select(func.count()).select_from(SignalDefinition))).scalar_one()
+        (
+            await db.execute(select(func.count()).select_from(SignalDefinition))
+        ).scalar_one()
     )
 
     signal_counts = SignalCounts(
