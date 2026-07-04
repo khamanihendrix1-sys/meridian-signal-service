@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from datetime import timedelta
 from typing import Any
 
@@ -17,9 +16,13 @@ from meridian.api.exceptions import (
     RateLimitedError,
     UnauthorizedError,
 )
-from meridian.api.models.errors import ErrorCode, ErrorDetail, ErrorResponse, make_error_response
+from meridian.api.models.errors import (
+    ErrorCode,
+    ErrorDetail,
+    ErrorResponse,
+    make_error_response,
+)
 from meridian.api.models.pagination import PaginatedResponse
-
 
 # ---------------------------------------------------------------------------
 # ErrorResponse model
@@ -38,7 +41,9 @@ class TestErrorResponse:
         assert err.timestamp is not None
 
     def test_with_details(self) -> None:
-        detail = ErrorDetail(field="email", message="Invalid format", code="value_error")
+        detail = ErrorDetail(
+            field="email", message="Invalid format", code="value_error"
+        )
         err = ErrorResponse(
             error_code=ErrorCode.VALIDATION_ERROR,
             message="Validation failed",
