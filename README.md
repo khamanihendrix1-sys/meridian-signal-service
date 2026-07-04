@@ -34,6 +34,47 @@ This service should be deployed to a container host (not Vercel). The recommende
 
 The service exposes `/healthz` for health checks (implemented in `meridian/api/routers/health.py`) and listens on internal port `8000`. In the current implementation, `/healthz` returns a minimal `{"status":"ok"}` response.
 
+## Deployments
+
+This repository includes an automated GitHub Actions workflow (`.github/workflows/deploy-fly.yml`) that handles both preview and production deployments to [Fly.io](https://fly.io).
+
+### Preview deployments (pull requests)
+
+Every pull request automatically:
+1. Creates (or reuses) an ephemeral Fly app named `meridian-signal-pr-<PR_NUMBER>`.
+2. Deploys the branch to that app in the `iad` region.
+3. Posts a comment on the PR with the preview URL: `https://meridian-signal-pr-<PR_NUMBER>.fly.dev`.
+
+When the pull request is **closed or merged**, the preview app is automatically destroyed.
+
+### Production deployment (main / master)
+
+Any push to the `main` or `master` branch deploys to the production app `meridian-signal-service`.
+
+### Required secret
+
+Add the following secret to your repository (**Settings → Secrets and variables → Actions → New repository secret**):
+
+| Secret | Description |
+|---|---|
+| `FLY_API_TOKEN` | A Fly.io API token with permission to create, deploy, and destroy apps. Generate with `fly auth token`. |
+
+### Assumptions
+
+- The service listens on **port 8000** (as configured in `fly.toml` and the `Dockerfile`). If you change the listen port, update `internal_port` in `fly.toml` to match.
+- The production Fly app (`meridian-signal-service`) must already exist in your Fly.io account before the first production deploy. Create it once with:
+  ```bash
+  fly apps create meridian-signal-service
+  ```
+- Preview apps are created automatically on first PR deployment; no manual setup is required.
+- Fly region is set to `iad` (Washington D.C.). Change `FLY_REGION` in the workflow `env` block to use a different region.
+
+### GitHub Environments (optional but recommended)
+
+Create two environments in **Settings → Environments**:
+- `preview` — no approval required.
+- `production` — require manual approval before deploy.
+
 ## Getting Started
 
 ### Requirements
