@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { meridianFetch } from "@/lib/meridian"
 import type { OverviewResponse } from "@/lib/types"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const qs = new URLSearchParams()

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { meridianFetch } from "@/lib/meridian"
 import type { SignalLogResponse } from "@/lib/types"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { meridianFetch } from "@/lib/meridian"
 import type { ListingResponse } from "@/lib/types"
 
+export const dynamic = "force-dynamic"
+
 const PASS_THROUGH = [
   "geography",
   "geo_type",
