@@ -4,6 +4,21 @@
 
 Meridian Signal Service is a Python FastAPI microservice that provides the data and intelligence backbone for Meridian Signals® and Meridian Data®. It exposes authenticated APIs for listings, market reports, signals, comps, and asynchronous report generation.
 
+## Market report capabilities
+
+The `/v1/market-reports` router includes snapshot retrieval plus extended report generation endpoints for:
+
+- comparable properties (`GET /v1/market-reports/comps`)
+- investment opportunity signals (`POST /v1/market-reports/investment-signals`)
+- neighborhood comparisons (`GET /v1/market-reports/compare`)
+- PDF exports (`GET /v1/market-reports/{report_id}/export?format=pdf`)
+- forecasts (`GET /v1/market-reports/forecast`)
+- heat index scoring (`GET /v1/market-reports/heat-index`)
+- seasonal analysis (`GET /v1/market-reports/seasonal`)
+- demographic correlation (`GET /v1/market-reports/demographics`)
+- scheduled email digests (`POST /v1/market-reports/schedules`)
+- custom dashboards (`POST /v1/market-reports/custom`)
+
 ## Production deployment
 
 This service should be deployed to a container host (not Vercel). The recommended default is **Fly.io** because this repository already includes a production `Dockerfile` and `deploy/fly.toml` config.

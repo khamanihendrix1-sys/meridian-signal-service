@@ -5,7 +5,7 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from meridian.db.models import MarketReport
+from meridian.db.models import MarketReport, MarketReportArtifact, MarketReportSchedule
 from meridian.db.models.enums import GeoType
 
 
@@ -46,6 +46,32 @@ class MarketReportRepository:
         await self.session.commit()
         await self.session.refresh(report)
         return report
+
+    async def get_generated_report(self, report_id: str) -> MarketReportArtifact | None:
+        """Get a generated market report artifact by ID."""
+        stmt = select(MarketReportArtifact).where(MarketReportArtifact.id == report_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def create_generated_report(
+        self,
+        report: MarketReportArtifact,
+    ) -> MarketReportArtifact:
+        """Persist a generated market report artifact."""
+        self.session.add(report)
+        await self.session.commit()
+        await self.session.refresh(report)
+        return report
+
+    async def create_schedule(
+        self,
+        schedule: MarketReportSchedule,
+    ) -> MarketReportSchedule:
+        """Persist a recurring market report schedule."""
+        self.session.add(schedule)
+        await self.session.commit()
+        await self.session.refresh(schedule)
+        return schedule
 
     async def get_reports_for_geography(
         self,
