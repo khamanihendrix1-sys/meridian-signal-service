@@ -11,6 +11,8 @@ from meridian.db.models.enums import (
 )
 from meridian.db.models.listing import Listing
 from meridian.db.models.market_report import MarketReport
+from meridian.db.models.market_report_artifact import MarketReportArtifact
+from meridian.db.models.market_report_schedule import MarketReportSchedule
 from meridian.db.models.signals import SignalDefinition, SignalLog
 
 __all__ = [
@@ -21,6 +23,8 @@ __all__ = [
     "Listing",
     "ListingStatus",
     "MarketReport",
+    "MarketReportArtifact",
+    "MarketReportSchedule",
     "PropertyType",
     "SignalCategory",
     "SignalDefinition",
