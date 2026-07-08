@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any
+from typing import Any, Sequence
 
 from fastapi import APIRouter, Depends, Query, Response, status
 from redis.asyncio import Redis
@@ -408,7 +407,7 @@ async def refresh_report(
     redis_client: Redis = Depends(get_redis),
     _token: dict[str, Any] = Depends(get_current_token),
 ) -> MarketReportResponse:
-    """Refresh market report by pulling fresh data from adapter."""
+    """Refresh market report by pulling fresh data from adapter and clearing cache."""
     service = MarketReportService(db)
     report = await service.refresh_report(
         geography=request.geography,

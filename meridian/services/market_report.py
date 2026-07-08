@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import io
 import random
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -99,6 +99,7 @@ class MarketReportService:
             mom_price_change=raw_metrics.mom_price_change,
             list_to_sold_ratio=raw_metrics.list_to_sold_ratio,
             raw_metrics=raw_metrics.raw_metrics,
+            created_at=datetime.now(UTC),
         )
 
         return await self.repo.create_report(report)
@@ -394,7 +395,6 @@ class MarketReportService:
         else:
             market_cycle = "stabilizing"
 
-        # Confidence starts at 92%, decays 4% per month, and bottoms out at 45%.
         return await self._store_generated_report(
             report_type="forecast",
             geography=geography,
@@ -403,6 +403,7 @@ class MarketReportService:
             payload={
                 "months_ahead": months_ahead,
                 "market_cycle": market_cycle,
+                # Confidence starts at 92%, decays 4% per month, and bottoms out at 45%.
                 "confidence": round(
                     _clip(
                         BASE_FORECAST_CONFIDENCE
