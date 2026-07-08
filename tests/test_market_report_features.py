@@ -125,6 +125,37 @@ async def test_heat_index_stays_in_expected_range() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("heat_index", "expected_label"),
+    [(75.0, "hot"), (50.0, "warm"), (49.9, "cold")],
+)
+async def test_heat_index_market_label_thresholds(
+    heat_index: float,
+    expected_label: str,
+) -> None:
+    service = _build_service()
+    service._heat_index_from_metrics = lambda metrics: heat_index  # type: ignore[method-assign]
+
+    artifact = await service.generate_heat_index(
+        geography="Atlanta",
+        geo_type=GeoType.CITY.value,
+    )
+    payload = HeatIndexResponse.model_validate(
+        {
+            "id": artifact.id,
+            "report_type": artifact.report_type,
+            "geography": artifact.geography,
+            "geo_type": artifact.geo_type,
+            "parameters": artifact.parameters,
+            "created_at": artifact.created_at,
+            **artifact.payload,
+        }
+    )
+
+    assert payload.market_label == expected_label
+
+
+@pytest.mark.asyncio
 async def test_export_report_pdf_returns_pdf_bytes() -> None:
     service = _build_service()
     request = CustomDashboardRequest.model_validate(

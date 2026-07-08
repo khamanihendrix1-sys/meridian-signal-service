@@ -251,10 +251,14 @@ class ScheduleReportRequest(BaseModel):
     def validate_email(cls, value: str) -> str:
         """Apply lightweight email validation without extra dependencies."""
         normalized = value.strip()
+        # Keep validation intentionally lightweight to avoid adding the optional
+        # email-validator dependency just for development/report scheduling.
         if (
             "@" not in normalized
             or normalized.startswith("@")
             or normalized.endswith("@")
+            or normalized.count("@") != 1
+            or " " in normalized
         ):
             raise ValueError("email must be a valid address")
         return normalized

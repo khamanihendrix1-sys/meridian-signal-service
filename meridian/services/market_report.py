@@ -18,6 +18,12 @@ from meridian.db.models.enums import GeoType, PropertyType
 from meridian.db.repositories import MarketReportRepository
 
 MAX_PDF_LINE_LENGTH = 110
+PDF_ELLIPSIS = "..."
+PDF_ELLIPSIS_LENGTH = len(PDF_ELLIPSIS)
+BASE_FORECAST_CONFIDENCE = 0.92
+FORECAST_CONFIDENCE_DECAY_PER_MONTH = 0.04
+MIN_FORECAST_CONFIDENCE = 0.45
+MAX_PRICE_BUFFER_MULTIPLIER = Decimal("1.20")
 
 
 def _clip(value: float, lower: float, upper: float) -> float:
@@ -124,11 +130,10 @@ class MarketReportService:
                 continue
 
             sold_date = listing.sold_date
-            days_on_market = (
-                (sold_date - listing.list_date).days
-                if sold_date is not None
-                else rng.randint(10, 75)
-            )
+            if sold_date is not None:
+                days_on_market = (sold_date - listing.list_date).days
+            else:
+                days_on_market = rng.randint(10, 75)
             comps.append(
                 {
                     "address": listing.address,
@@ -209,7 +214,10 @@ class MarketReportService:
             as_of=date.today(),
         )
         heat_index = self._heat_index_from_metrics(metrics)
-        price_ratio = float(max_price / metrics.median_price)
+        median_price = (
+            metrics.median_price if metrics.median_price > 0 else Decimal("1.00")
+        )
+        price_ratio = float(max_price / median_price)
         roi_boost = max(metrics.yoy_price_change, 0) * 100 + heat_index / 5
         risk_modifier = {"low": 0.85, "medium": 1.0, "high": 1.15}[risk_level]
         opportunities = [
@@ -256,7 +264,7 @@ class MarketReportService:
             item
             for item in opportunities
             if Decimal(str(item["estimated_roi"])) >= Decimal(str(min_roi))
-            and metrics.median_price <= max_price * Decimal("1.20")
+            and metrics.median_price <= max_price * MAX_PRICE_BUFFER_MULTIPLIER
         ]
         if not filtered:
             filtered = opportunities[:1]
@@ -313,6 +321,7 @@ class MarketReportService:
                 }
             )
 
+        # Lower days-on-market is better, so invert DOM values for comparison.
         leader = max(
             comparisons,
             key=lambda item: (
@@ -383,6 +392,7 @@ class MarketReportService:
         else:
             market_cycle = "stabilizing"
 
+        # Confidence degrades 4% for each additional month, with a 45% floor.
         return await self._store_generated_report(
             report_type="forecast",
             geography=geography,
@@ -391,7 +401,15 @@ class MarketReportService:
             payload={
                 "months_ahead": months_ahead,
                 "market_cycle": market_cycle,
-                "confidence": round(_clip(0.92 - months_ahead * 0.04, 0.45, 0.92), 2),
+                "confidence": round(
+                    _clip(
+                        BASE_FORECAST_CONFIDENCE
+                        - months_ahead * FORECAST_CONFIDENCE_DECAY_PER_MONTH,
+                        MIN_FORECAST_CONFIDENCE,
+                        BASE_FORECAST_CONFIDENCE,
+                    ),
+                    2,
+                ),
                 "monthly_forecast": forecast,
             },
         )
@@ -458,6 +476,8 @@ class MarketReportService:
     ) -> MarketReportArtifact:
         """Generate a seasonal market analysis report."""
         rng = self._rng_for_seed(f"seasonal:{geography}:{year}")
+        if not 1 <= month <= 12:
+            raise ValueError("month must be between 1 and 12")
         monthly_pattern = [
             {
                 "month": current_month,
@@ -784,7 +804,9 @@ class MarketReportService:
                 pdf.setFont("Helvetica", 10)
                 text = pdf.beginText(40, 760)
             if len(line) > MAX_PDF_LINE_LENGTH:
-                text.textLine(f"{line[: MAX_PDF_LINE_LENGTH - 3]}...")
+                text.textLine(
+                    f"{line[: MAX_PDF_LINE_LENGTH - PDF_ELLIPSIS_LENGTH]}{PDF_ELLIPSIS}"
+                )
             else:
                 text.textLine(line)
         pdf.drawText(text)
