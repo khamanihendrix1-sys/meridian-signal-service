@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import io
 import random
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -93,7 +93,6 @@ class MarketReportService:
             mom_price_change=raw_metrics.mom_price_change,
             list_to_sold_ratio=raw_metrics.list_to_sold_ratio,
             raw_metrics=raw_metrics.raw_metrics,
-            created_at=datetime.now(UTC),
         )
 
         return await self.repo.create_report(report)
@@ -573,7 +572,6 @@ class MarketReportService:
             email=email,
             metrics=metrics,
             active=True,
-            created_at=datetime.now(UTC),
         )
         return await self.repo.create_schedule(schedule)
 
@@ -688,7 +686,6 @@ class MarketReportService:
             geo_type=geo_type,
             parameters=parameters,
             payload=payload,
-            created_at=datetime.now(UTC),
         )
         return await self.repo.create_generated_report(artifact)
 
@@ -786,7 +783,10 @@ class MarketReportService:
                 pdf.showPage()
                 pdf.setFont("Helvetica", 10)
                 text = pdf.beginText(40, 760)
-            text.textLine(line[:MAX_PDF_LINE_LENGTH])
+            if len(line) > MAX_PDF_LINE_LENGTH:
+                text.textLine(f"{line[: MAX_PDF_LINE_LENGTH - 3]}...")
+            else:
+                text.textLine(line)
         pdf.drawText(text)
         pdf.save()
         return buffer.getvalue()

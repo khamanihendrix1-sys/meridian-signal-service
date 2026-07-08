@@ -86,7 +86,9 @@ async def get_latest_report(
     ),
     geo_type: str = Query(
         ...,
-        description="Geography type — one of METRO, ZIP, COUNTY, NEIGHBORHOOD, CITY",
+        description=(
+            "Geography type — one of METRO, ZIP, COUNTY, NEIGHBORHOOD, or CITY"
+        ),
         examples=["CITY"],
     ),
     db: AsyncSession = Depends(get_db),
@@ -434,7 +436,10 @@ async def list_reports(
     response: Response,
     geography: str = Query(..., description="Geography identifier"),
     geo_type: str = Query(
-        ..., description="Geography type (METRO, ZIP, COUNTY, NEIGHBORHOOD, CITY)"
+        ...,
+        description=(
+            "Geography type — one of METRO, ZIP, COUNTY, NEIGHBORHOOD, or CITY"
+        ),
     ),
     limit: int = Query(
         10, ge=1, le=100, description="Maximum number of reports to return"

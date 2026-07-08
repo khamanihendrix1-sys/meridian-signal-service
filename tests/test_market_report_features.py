@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any, cast
 
 import pytest
@@ -22,10 +23,14 @@ class _FakeMarketReportRepo:
         self._artifacts: dict[str, Any] = {}
 
     async def create_generated_report(self, report: Any) -> Any:
+        if getattr(report, "created_at", None) is None:
+            report.created_at = datetime.now(UTC)
         self._artifacts[str(report.id)] = report
         return report
 
     async def create_schedule(self, schedule: Any) -> Any:
+        if getattr(schedule, "created_at", None) is None:
+            schedule.created_at = datetime.now(UTC)
         return schedule
 
     async def get_generated_report(self, report_id: str) -> Any:
