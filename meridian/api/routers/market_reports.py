@@ -488,12 +488,12 @@ async def list_reports(
 )
 async def export_market_report(
     report_id: str,
-    format: str = Query("pdf"),
+    export_format: str = Query("pdf", alias="format"),
     db: AsyncSession = Depends(get_db),
     _token: dict[str, Any] = Depends(get_current_token),
 ) -> Response:
     """Export a stored market report or generated artifact as PDF."""
-    if format.lower() != "pdf":
+    if export_format.lower() != "pdf":
         raise BadRequestError(
             "Only PDF export is supported",
             error_code=ErrorCode.BAD_REQUEST,

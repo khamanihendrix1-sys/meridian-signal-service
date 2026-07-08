@@ -17,6 +17,8 @@ from meridian.db.models import MarketReport, MarketReportArtifact, MarketReportS
 from meridian.db.models.enums import GeoType, PropertyType
 from meridian.db.repositories import MarketReportRepository
 
+MAX_PDF_LINE_LENGTH = 110
+
 
 def _clip(value: float, lower: float, upper: float) -> float:
     """Clamp a numeric value to an inclusive range."""
@@ -692,7 +694,7 @@ class MarketReportService:
 
     def _rng_for_seed(self, seed: str) -> random.Random:
         """Create a deterministic RNG for repeatable mock payloads."""
-        seed_value = int(hashlib.md5(seed.encode()).hexdigest(), 16) % (2**32)
+        seed_value = int(hashlib.sha256(seed.encode()).hexdigest(), 16) % (2**32)
         return random.Random(seed_value)
 
     def _fallback_comps(
@@ -784,7 +786,7 @@ class MarketReportService:
                 pdf.showPage()
                 pdf.setFont("Helvetica", 10)
                 text = pdf.beginText(40, 760)
-            text.textLine(line[:110])
+            text.textLine(line[:MAX_PDF_LINE_LENGTH])
         pdf.drawText(text)
         pdf.save()
         return buffer.getvalue()
