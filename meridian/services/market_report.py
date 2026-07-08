@@ -321,13 +321,15 @@ class MarketReportService:
                 }
             )
 
-        # Lower days-on-market is better, so invert DOM values for comparison.
-        leader = max(
-            comparisons,
-            key=lambda item: (
-                -item["current_value"] if metric == "dom" else item["current_value"]
-            ),
-        )["geography"]
+        # Lower days-on-market is stronger, so compare DOM using the inverse.
+        if metric == "dom":
+            leader = max(comparisons, key=lambda item: -item["current_value"])[
+                "geography"
+            ]
+        else:
+            leader = max(comparisons, key=lambda item: item["current_value"])[
+                "geography"
+            ]
         return await self._store_generated_report(
             report_type="neighborhood_comparison",
             geography=",".join(geographies),
@@ -392,7 +394,7 @@ class MarketReportService:
         else:
             market_cycle = "stabilizing"
 
-        # Confidence degrades 4% for each additional month, with a 45% floor.
+        # Confidence starts at 92%, decays 4% per month, and bottoms out at 45%.
         return await self._store_generated_report(
             report_type="forecast",
             geography=geography,
